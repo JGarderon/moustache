@@ -1,12 +1,13 @@
-
 use crate::engine::resolver;
+use crate::engine::environment;
 
 #[derive(Debug)]
 pub struct Document {
-  source: String,
+  pub source: String,
   stack: Vec<Part>
 }
 
+#[allow(dead_code)]
 impl Document {
   pub fn new(source: String) -> Self {
     Document {
@@ -97,11 +98,11 @@ impl Document {
     let mut string = "\n---\n[DEBUG STACK]".to_string(); 
     for p in &self.stack {
       match p {
-        Part::StaticText(s,e) => string.push_str(&format!("\n>> static text... {}", &self.source[*s..*e])[..]),
-        Part::GeneratedText(s) => string.push_str(&format!("\n>> generated text... {}", s)[..]),
-        Part::Statement(s,e) => string.push_str(&format!("\n>> statement... {}", &self.source[*s..*e])[..]),
-        Part::Expression(s,e) => string.push_str(&format!("\n>> expression... {}", &self.source[*s..*e])[..]),
-        Part::Comment(s,e) => string.push_str(&format!("\n>> comment text... {}", &self.source[*s..*e])[..])
+        Part::StaticText(s,e) => string.push_str(&format!("\n>> static text...\n{}", &self.source[*s..*e])[..]),
+        Part::GeneratedText(s) => string.push_str(&format!("\n>> generated text... \n{}", s)[..]),
+        Part::Statement(s,e) => string.push_str(&format!("\n>> statement... \n{}", &self.source[*s..*e])[..]),
+        Part::Expression(s,e) => string.push_str(&format!("\n>> expression... \n{}", &self.source[*s..*e])[..]),
+        Part::Comment(s,e) => string.push_str(&format!("\n>> comment text... \n{}", &self.source[*s..*e])[..])
       }
     }
     string.push_str("\n---\n");
@@ -123,8 +124,8 @@ impl Document {
       stack: vec!()
     }
   }
-  pub fn resolve(&mut self) -> Result<bool,String> {
-    match resolver::resolve(self) {
+  pub fn resolve(&mut self, env: &mut environment::Environment) -> Result<bool,String> {
+    match resolver::resolve(self, env) {
       Ok(v) if v.len() == 0 => Ok(false),
       Ok(v) => {
         self.stack = v;
