@@ -1,0 +1,8 @@
+[package]
+name = "moustache"
+version = "0.1.0"
+edition = "2021"
+authors = ["Julien Garderon <julien.garderon@gmail.com>"]
+
+# [dependencies]
+# utils_macro = { path = "./utils_macro" }
