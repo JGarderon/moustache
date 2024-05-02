@@ -1,5 +1,6 @@
 
 mod document;
+mod parser;
 mod resolver;
 mod environment;
 

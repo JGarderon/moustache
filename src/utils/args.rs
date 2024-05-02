@@ -43,9 +43,11 @@ pub fn parse() -> Result<Configuration,String> {
           "the variable has not been defined in the command line parameters"
         ))
       }
+      "--reentrant" | "-r" => c.is_reentrant(true),
       _ => ()
     }
   }
+  c.is_reentrant = true;
   Ok(c)
 }
 
@@ -55,11 +57,12 @@ pub fn display_helping() {
 "Moustache - v0.0.1 (april 2024)
 by Julien Garderon <julien.garderon@gmail.com>
 
-  --help    | -h    display this message and exit (0)
-  --debug   | -d    display the debug
-  --input   | -i    input of process (path ; else stdin)
-  --output  | -o    output of process (path)
-  --var     | -v    add var to env 
+  --help      | -h    display this message and exit (0)
+  --debug     | -d    display the debug
+  --input     | -i    input of process (path ; else stdin)
+  --output    | -o    output of process (path)
+  --var       | -v    add var to env 
+  --reentrant | -r    document is reentrant 
 "
   );
 }

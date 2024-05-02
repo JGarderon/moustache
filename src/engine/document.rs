@@ -1,3 +1,5 @@
+use std::fs;
+
 use crate::engine::resolver;
 use crate::engine::environment;
 
@@ -126,12 +128,19 @@ impl Document {
   }
   pub fn resolve(&mut self, env: &mut environment::Environment) -> Result<bool,String> {
     match resolver::resolve(self, env) {
-      Ok(v) if v.len() == 0 => Ok(false),
-      Ok(v) => {
-        self.stack = v;
+      Ok(r) => if r.changed {
+        self.stack = r.stack;
         Ok(true)
+      } else { 
+        Ok(false) 
       }
       Err(err) => Err(err)
+    }
+  }
+  pub fn write<'a>(&self, output: &'a str) -> Option<String> {
+    match fs::write(output, &self.source) {
+      Ok(_) => None,
+      Err(err) => Some(err.to_string())
     }
   }
 }

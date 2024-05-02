@@ -1,4 +1,8 @@
 
+use std::fs::File;
+use std::io::Read;
+use std::io;
+
 mod utils;
 mod engine;
 
@@ -21,51 +25,88 @@ fn main() {
 
   let mut env = engine::Environment::from_args(&conf);
 
-  // Prise en charge du STDIN ou path input à faire 
-  let mut doc = engine::Document::from_str("
-    Ceci est un texte{# 
-      avec un 
-      commentaire 
-      multilignes
-    #}{{ mavar }}!");
-  
-  match doc.parse_parts() {
-    Ok(r) => if conf.is_debugging {
-      if r {
-        println!("Parse parts = part(s) found (n = {})", doc.stack_len());
-      } else {
-        println!("Parse parts = nothing to do");
+  let mut buffer = String::new();
+  match conf.input {
+    Some(path) => match File::open(path) {
+      Ok(mut fd) => match fd.read_to_string(&mut buffer) {
+        Ok(_) => (),
+        Err(err) => {
+          println!("Error during read input from file descriptor = {:?}", err.to_string());
+          std::process::exit(1);
+        }
+      }
+      Err(err) => {
+        println!("Error during open input = {:?}", err.to_string());
+        std::process::exit(1);
       }
     }
-    Err(err) => {
-      println!("Fatal error during parsing : {:?}", err);
-      std::process::exit(1);
+    Non => match io::stdin().read_to_string(&mut buffer) {
+      Ok(_) => (),
+      Err(err) => {
+        println!("Error during read input from stdin = {:?}", err.to_string());
+        std::process::exit(1);
+      }
     }
-  }
-  if conf.is_debugging {
-    println!("{}", doc.debug_stack())
-  }
+  };
+  let mut doc = engine::Document::new(buffer);
+  
+  let mut reentrance: usize = 0;
+  loop {
+    reentrance += 1;
+    if conf.is_debugging {
+      println!("--- Reentrance n°{:?}", reentrance);
+    }
+    match doc.parse_parts() {
+      Ok(r) => if conf.is_debugging {
+        if r {
+          println!("Parse parts = part(s) found (n = {})", doc.stack_len());
+        } else {
+          println!("Parse parts = nothing to do (blank source)");
+          break;
+        }
+      }
+      Err(err) => {
+        println!("Fatal error during parsing : {:?}", err);
+        std::process::exit(1);
+      }
+    }
+    if conf.is_debugging {
+      println!("{}", doc.debug_stack())
+    }
 
-  match doc.resolve(&mut env) {
-    Ok(changed) => {
-      if conf.is_debugging {
-        println!("Resolved, source changed = {:?}", changed);
+    match doc.resolve(&mut env) {
+      Ok(changed) => {
+        if conf.is_debugging {
+          println!("Resolved, source changed = {:?}", changed);
+        }
+        if changed {
+          doc = doc.transform(); 
+        } else {
+          println!("Resolve parts = nothing to do (no change)");
+          break;
+        }
       }
-      if changed {
-        doc = doc.transform(); 
+      Err(err) => {
+        println!("Error during resolving = {:?}", err);
+        std::process::exit(1);
       }
     }
-    Err(err) => {
-      println!("Error during resolving = {:?}", err);
-      std::process::exit(1);
+    if conf.is_reentrant == false {
+      break;
     }
   }
   
-  // prise en charge de l'output en fichier et non en console à faire 
   match conf.output {
-    Some(_) => unimplemented!(),
+    Some(path) => match doc.write(&path[..]) {
+      Some(err) => {
+        println!("Error during write output = {:?}", err);
+        std::process::exit(1);
+      }
+      None => if conf.is_debugging {
+        println!("Write output to {:?}", path);
+      } 
+    }
     None => println!("{}", doc.source)
   }
-
-  std::process::exit(0);
+  std::process::exit(0);  
 }
