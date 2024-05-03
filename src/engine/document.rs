@@ -6,7 +6,7 @@ use crate::engine::resolver;
 #[derive(Debug)]
 pub struct Document {
   pub source: String,
-  stack: Vec<Part>,
+  pub stack: Vec<Part>,
 }
 
 #[allow(dead_code)]

@@ -14,6 +14,26 @@ fn add_string_to_another(s1: &mut String, s2: &mut String) {
   s2.push_str(s1);
 }
 
+// #[allow(unused_mut)]
+// #[allow(unused_variables)]
+// fn resolve_statement<'a>(
+//   _doc: &'a Document,
+//   expr: &'a str,
+//   env: &mut Environment,
+// ) -> Result<Part, String> {
+//   let source: &str = &expr[2..expr.len() - 2];
+//   println!("{:?}", source);
+//   let tokens: Vec<parser::Token> = match parser::parse(source) {
+//     Ok(t) => t,
+//     Err(err) => return Err(err),
+//   };
+//   let mut output = "".to_string();
+//   let mut iter = tokens.iter().peekable();
+//   let mut is_begining: bool = true;
+//   println!("--> {:?}", tokens);
+//   Ok(Part::GeneratedText(output))
+// }
+
 fn resolve_expression<'a>(
   _doc: &'a Document,
   expr: &'a str,
@@ -121,7 +141,14 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
         }
         changed = true;
       }
-      Some(Part::GeneratedText(_)) | Some(Part::Statement(_, _)) | Some(Part::Comment(_, _)) => (),
+      Some(&Part::Statement(s, e)) => {
+        // match resolve_statement(doc, &doc.source[s..e], env) {
+        //   Ok(p) => result.push(p),
+        //   Err(err) => return Err(err),
+        // }
+        // changed = true;
+      }
+      Some(Part::GeneratedText(_)) | Some(Part::Comment(_, _)) => (),
       None => break,
     }
     position += 1;
