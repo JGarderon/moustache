@@ -67,7 +67,7 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
   let mut is_text: bool = false;
   let mut portion_start: usize = 0;
   let mut is_escaping: bool = false;
-  for (i, c) in source.chars().enumerate() {
+  for (i, c) in source.char_indices() {
     // println!(
     //   "(boucle) i = {:?} ; c = {:?} ; is_text = {:?} ; portion_start = {:?} ; is_escaping = {:?}",
     //   i, c, is_text, portion_start, is_escaping
