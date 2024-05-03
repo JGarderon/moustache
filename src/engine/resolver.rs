@@ -141,7 +141,7 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
         }
         changed = true;
       }
-      Some(&Part::Statement(s, e)) => {
+      Some(&Part::Statement(_s, _e)) => {
         // match resolve_statement(doc, &doc.source[s..e], env) {
         //   Ok(p) => result.push(p),
         //   Err(err) => return Err(err),

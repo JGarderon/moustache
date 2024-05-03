@@ -30,88 +30,91 @@ impl Document {
     self.stack.get(position)
   }
   pub fn parse_parts(&mut self) -> Result<bool, String> {
-    let iter = self.source.chars().collect::<Vec<char>>();
+    let iter = self.source.char_indices().collect::<Vec<(usize,char)>>();
     if iter.len() == 0 {
       return Ok(false);
     }
     let mut part_type: Part = Part::StaticText(0, 0);
     let mut max = 0;
-    for (i, w) in iter.windows(2).enumerate() {
-      max = i;
-      match w {
-        ['{', '{'] => {
-          match part_type {
-            Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
-            p => {
-              return Err(format!(
-                "not authorized : start another part 'Expression' in {:?} part",
-                p
-              ))
+    for window in iter.windows(2) {
+      if let [(ref_i, w1), (_, w2)] = window {
+        let i: usize = *ref_i;
+        max = i;
+        match (w1, w2) {
+          ('{', '{') => {
+            match part_type {
+              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              p => {
+                return Err(format!(
+                  "not authorized : start another part 'Expression' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::Expression(i, 0);
           }
-          part_type = Part::Expression(i, 0);
-        }
-        ['}', '}'] => {
-          match part_type {
-            Part::Expression(y, _) => self.stack.push(Part::Expression(y, i + 2)),
-            p => {
-              return Err(format!(
-                "not authorized : end another part 'Expression' in {:?} part",
-                p
-              ))
+          ('}', '}') => {
+            match part_type {
+              Part::Expression(y, _) => self.stack.push(Part::Expression(y, i + 2)),
+              p => {
+                return Err(format!(
+                  "not authorized : end another part 'Expression' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::StaticText(i + 2, 0);
           }
-          part_type = Part::StaticText(i + 2, 0);
-        }
-        ['{', '%'] => {
-          match part_type {
-            Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
-            p => {
-              return Err(format!(
-                "not authorized : start another part 'Statement' in {:?} part",
-                p
-              ))
+          ('{', '%') => {
+            match part_type {
+              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              p => {
+                return Err(format!(
+                  "not authorized : start another part 'Statement' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::Statement(i, 0);
           }
-          part_type = Part::Statement(i, 0);
-        }
-        ['%', '}'] => {
-          match part_type {
-            Part::Statement(y, _) => self.stack.push(Part::Statement(y, i + 2)),
-            p => {
-              return Err(format!(
-                "not authorized : end another part 'Statement' in {:?} part",
-                p
-              ))
+          ('%', '}') => {
+            match part_type {
+              Part::Statement(y, _) => self.stack.push(Part::Statement(y, i + 2)),
+              p => {
+                return Err(format!(
+                  "not authorized : end another part 'Statement' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::StaticText(i + 2, 0);
           }
-          part_type = Part::StaticText(i + 2, 0);
-        }
-        ['{', '#'] => {
-          match part_type {
-            Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
-            p => {
-              return Err(format!(
-                "not authorized : start another part 'Comment' in {:?} part",
-                p
-              ))
+          ('{', '#') => {
+            match part_type {
+              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              p => {
+                return Err(format!(
+                  "not authorized : start another part 'Comment' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::Comment(i, 0);
           }
-          part_type = Part::Comment(i, 0);
-        }
-        ['#', '}'] => {
-          match part_type {
-            Part::Comment(y, _) => self.stack.push(Part::Comment(y, i + 2)),
-            p => {
-              return Err(format!(
-                "not authorized : end another part 'Comment' in {:?} part",
-                p
-              ))
+          ('#', '}') => {
+            match part_type {
+              Part::Comment(y, _) => self.stack.push(Part::Comment(y, i + 2)),
+              p => {
+                return Err(format!(
+                  "not authorized : end another part 'Comment' in {:?} part",
+                  p
+                ))
+              }
             }
+            part_type = Part::StaticText(i + 2, 0);
           }
-          part_type = Part::StaticText(i + 2, 0);
+          _ => (),
         }
-        _ => (),
       }
     }
     let l = self.source.len();
@@ -132,18 +135,18 @@ impl Document {
     let mut string = "\n---\n[DEBUG STACK]".to_string();
     for p in &self.stack {
       match p {
-        Part::StaticText(s, e) => {
-          string.push_str(&format!("\n>> static text...\n{}", &self.source[*s..*e])[..])
+        &Part::StaticText(s, e) => {
+          string.push_str(&format!("\n>> static text...\n--{}--", &self.source[s..e])[..])
         }
         Part::GeneratedText(s) => string.push_str(&format!("\n>> generated text... \n{}", s)[..]),
-        Part::Statement(s, e) => {
-          string.push_str(&format!("\n>> statement... \n{}", &self.source[*s..*e])[..])
+        &Part::Statement(s, e) => {
+          string.push_str(&format!("\n>> statement... \n--{}--", &self.source[s..e])[..])
         }
-        Part::Expression(s, e) => {
-          string.push_str(&format!("\n>> expression... \n{}", &self.source[*s..*e])[..])
+        &Part::Expression(s, e) => {
+          string.push_str(&format!("\n>> expression... \n--{}--", &self.source[s..e])[..])
         }
-        Part::Comment(s, e) => {
-          string.push_str(&format!("\n>> comment text... \n{}", &self.source[*s..*e])[..])
+        &Part::Comment(s, e) => {
+          string.push_str(&format!("\n>> comment text... \n--{}--", &self.source[s..e])[..])
         }
       }
     }
@@ -154,10 +157,10 @@ impl Document {
     let mut destination: String = "".to_string();
     for p in &self.stack {
       match p {
-        Part::StaticText(s, e) => destination.push_str(&self.source[*s..*e]),
+        &Part::StaticText(s, e) => destination.push_str(&self.source[s..e]),
         Part::GeneratedText(s) => destination.push_str(&s[..]),
-        Part::Statement(s, e) => destination.push_str(&self.source[*s..*e]),
-        Part::Expression(s, e) => destination.push_str(&self.source[*s..*e]),
+        &Part::Statement(s, e) => destination.push_str(&self.source[s..e]),
+        &Part::Expression(s, e) => destination.push_str(&self.source[s..e]),
         Part::Comment(_, _) => (),
       }
     }
