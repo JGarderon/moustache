@@ -1,8 +1,7 @@
-
 mod document;
+mod environment;
 mod parser;
 mod resolver;
-mod environment;
 
 pub use crate::engine::document::Document;
 pub use crate::engine::environment::Environment;

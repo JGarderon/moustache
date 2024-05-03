@@ -4,19 +4,19 @@ use crate::utils::conf::Configuration;
 
 #[derive(Debug)]
 pub struct Environment {
-  stack: HashMap<String,String>
+  stack: HashMap<String, String>,
 }
 
 #[allow(dead_code)]
 impl Environment {
   pub fn new() -> Self {
     Environment {
-      stack: HashMap::new()
+      stack: HashMap::new(),
     }
   }
   pub fn from_args(conf: &Configuration) -> Self {
     Environment {
-      stack: conf.variables.clone()
+      stack: conf.variables.clone(),
     }
   }
   pub fn set(&mut self, key: String, value: String) {

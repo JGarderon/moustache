@@ -4,10 +4,10 @@ use std::collections::HashMap;
 pub struct Configuration {
   pub input: Option<String>,
   pub output: Option<String>,
-  pub variables: HashMap<String,String>,
+  pub variables: HashMap<String, String>,
   pub is_helping: bool,
   pub is_debugging: bool,
-  pub is_reentrant: bool
+  pub is_reentrant: bool,
 }
 
 impl Configuration {
@@ -18,7 +18,7 @@ impl Configuration {
       variables: HashMap::new(),
       is_helping: false,
       is_debugging: false,
-      is_reentrant: false
+      is_reentrant: false,
     }
   }
   pub fn is_helping(&mut self, v: bool) {

@@ -1,0 +1,7 @@
+edition = "2021"
+max_width = 100
+hard_tabs = false
+tab_spaces = 2
+newline_style = "Unix"
+use_small_heuristics = "Default"
+attr_fn_like_width = 70

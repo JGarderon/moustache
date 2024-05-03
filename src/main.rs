@@ -1,15 +1,13 @@
-
 use std::fs::File;
-use std::io::Read;
 use std::io;
+use std::io::Read;
 
-mod utils;
 mod engine;
+mod utils;
 
 fn main() {
-
   let conf = match utils::args::parse() {
-    Ok(conf) => conf, 
+    Ok(conf) => conf,
     Err(err) => {
       println!("Fatal error : {}", err);
       std::process::exit(1);
@@ -31,25 +29,28 @@ fn main() {
       Ok(mut fd) => match fd.read_to_string(&mut buffer) {
         Ok(_) => (),
         Err(err) => {
-          println!("Error during read input from file descriptor = {:?}", err.to_string());
+          println!(
+            "Error during read input from file descriptor = {:?}",
+            err.to_string()
+          );
           std::process::exit(1);
         }
-      }
+      },
       Err(err) => {
         println!("Error during open input = {:?}", err.to_string());
         std::process::exit(1);
       }
-    }
-    Non => match io::stdin().read_to_string(&mut buffer) {
+    },
+    None => match io::stdin().read_to_string(&mut buffer) {
       Ok(_) => (),
       Err(err) => {
         println!("Error during read input from stdin = {:?}", err.to_string());
         std::process::exit(1);
       }
-    }
+    },
   };
   let mut doc = engine::Document::new(buffer);
-  
+
   let mut reentrance: usize = 0;
   loop {
     reentrance += 1;
@@ -57,12 +58,14 @@ fn main() {
       println!("--- Reentrance n°{:?}", reentrance);
     }
     match doc.parse_parts() {
-      Ok(r) => if conf.is_debugging {
-        if r {
-          println!("Parse parts = part(s) found (n = {})", doc.stack_len());
-        } else {
-          println!("Parse parts = nothing to do (blank source)");
-          break;
+      Ok(r) => {
+        if conf.is_debugging {
+          if r {
+            println!("Parse parts = part(s) found (n = {})", doc.stack_len());
+          } else {
+            println!("Parse parts = nothing to do (blank source)");
+            break;
+          }
         }
       }
       Err(err) => {
@@ -80,7 +83,7 @@ fn main() {
           println!("Resolved, source changed = {:?}", changed);
         }
         if changed {
-          doc = doc.transform(); 
+          doc = doc.transform();
         } else {
           println!("Resolve parts = nothing to do (no change)");
           break;
@@ -95,18 +98,20 @@ fn main() {
       break;
     }
   }
-  
+
   match conf.output {
     Some(path) => match doc.write(&path[..]) {
       Some(err) => {
         println!("Error during write output = {:?}", err);
         std::process::exit(1);
       }
-      None => if conf.is_debugging {
-        println!("Write output to {:?}", path);
-      } 
-    }
-    None => println!("{}", doc.source)
+      None => {
+        if conf.is_debugging {
+          println!("Write output to {:?}", path);
+        }
+      }
+    },
+    None => println!("{}", doc.source),
   }
-  std::process::exit(0);  
+  std::process::exit(0);
 }
