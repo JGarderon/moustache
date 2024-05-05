@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::utils::conf::Configuration;
 use crate::engine::document::Part;
+use crate::utils::conf::Configuration;
 
 #[derive(Debug)]
 pub struct Environment {

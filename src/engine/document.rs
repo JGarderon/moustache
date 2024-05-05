@@ -30,7 +30,7 @@ impl Document {
     self.stack.get(position)
   }
   pub fn parse_parts(&mut self) -> Result<bool, String> {
-    let iter = self.source.char_indices().collect::<Vec<(usize,char)>>();
+    let iter = self.source.char_indices().collect::<Vec<(usize, char)>>();
     if iter.len() == 0 {
       return Ok(false);
     }
@@ -190,7 +190,7 @@ impl Document {
   }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum Part {
   StaticText(usize, usize),
   GeneratedText(String),
