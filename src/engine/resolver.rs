@@ -1,7 +1,11 @@
+use std::iter::Peekable;
+use core::slice::Iter;
+
 use crate::engine::document::Document;
 use crate::engine::document::Part;
 use crate::engine::environment::Environment;
 use crate::engine::parser;
+use crate::engine::parser::Token;
 
 #[derive(Debug)]
 pub struct Resolved {
@@ -14,25 +18,104 @@ fn add_string_to_another(s1: &mut String, s2: &mut String) {
   s2.push_str(s1);
 }
 
+fn resolve_statement_block<'a>(
+  doc: &'a Document,
+  doc_position: usize,
+  env: &mut Environment,
+  source: &'a str,
+  iter_tokens: &mut Peekable<Iter<'_, Token>>,
+) -> Result<usize, String> {
+  let block_name: String;
+  loop {
+    match iter_tokens.next() {
+      Some(token) => match token {
+        Token::Space(_) => (),
+        &Token::Text(s,e) => { 
+          block_name = source[s..e].to_string();
+          break;
+        }
+        t => return Err(format!("token {} not authorized in declarative block statement", t))
+      },
+      None => return Err("unfinished declaration block".to_string()) 
+    };
+  }
+  let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
+  let mut block_ending_position: usize; 
+  loop {
+    let part = match iter_parts.next() {
+      Some((position, part)) => {
+        block_ending_position = position;
+        part
+      }
+      None => return Err("unfinished block".to_string())
+    };
+    match part {
+      &Part::Statement(s,e) if  doc.source[s+2..e-2].trim() == "endblock" => break,
+      _ => ()
+    }
+  }
+  let mut block: Vec<Part> = vec!();
+  block.extend_from_slice(&doc.stack[doc_position+1..doc_position+block_ending_position]);
+  env.set_block(block_name, block);
+  return Ok(block_ending_position+1);
+}
+
+fn resolve_statement_call<'a>(
+  _env: &mut Environment,
+  _source: &'a str,
+  _iter_tokens: &mut Peekable<Iter<'_, Token>>,
+) -> Result<Vec<Part>, String> {
+  println!("call");
+  return Ok(vec!());
+}
+
 // #[allow(unused_mut)]
 // #[allow(unused_variables)]
-// fn resolve_statement<'a>(
-//   _doc: &'a Document,
-//   expr: &'a str,
-//   env: &mut Environment,
-// ) -> Result<Part, String> {
-//   let source: &str = &expr[2..expr.len() - 2];
-//   println!("{:?}", source);
-//   let tokens: Vec<parser::Token> = match parser::parse(source) {
-//     Ok(t) => t,
-//     Err(err) => return Err(err),
-//   };
-//   let mut output = "".to_string();
-//   let mut iter = tokens.iter().peekable();
-//   let mut is_begining: bool = true;
-//   println!("--> {:?}", tokens);
-//   Ok(Part::GeneratedText(output))
-// }
+fn resolve_statement<'a>(
+  doc: &'a Document,
+  doc_position: usize,
+  expr: &'a str,
+  env: &mut Environment,
+) -> Result<(Vec<Part>,usize), String> {
+  let source: &str = &expr[2..expr.len()-2];
+  let tokens: Vec<parser::Token> = match parser::parse(source) {
+    Ok(t) => t,
+    Err(err) => return Err(err),
+  };
+  let mut output: Vec<Part> = vec!();
+  let mut iter = tokens.iter().peekable();
+  let mut position_skip: usize = 0;
+  loop {
+    let token = match iter.next() {
+      Some(t) => t,
+      None => break,
+    };
+    match token {
+      &parser::Token::Symbol(s,e) => match &source[s..e] {
+        "block" => match resolve_statement_block(doc, doc_position, env, source, &mut iter) {
+          Ok(p) => {
+            position_skip = p;
+            break;
+          }
+          Err(err) => return Err(format!("error in declaring block statement : {}", err))
+        }
+        "call" => match resolve_statement_call(env, source, &mut iter) {
+          Ok(v) => {
+            if v.len() > 0 {
+              output.extend(v);
+            }
+            break;
+          }
+          Err(err) => return Err(format!("error in call block statement : {}", err))
+        }
+        s => return Err(format!("invalid action {} in statement", s)),
+      }
+      parser::Token::Space(_) => (),
+      t => return Err(format!("token {} not authorized in statement", t)),
+    }
+  }
+  Ok((output, position_skip))
+}
 
 fn resolve_expression<'a>(
   _doc: &'a Document,
@@ -141,12 +224,17 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
         }
         changed = true;
       }
-      Some(&Part::Statement(_s, _e)) => {
-        // match resolve_statement(doc, &doc.source[s..e], env) {
-        //   Ok(p) => result.push(p),
-        //   Err(err) => return Err(err),
-        // }
-        // changed = true;
+      Some(&Part::Statement(s, e)) => {
+        match resolve_statement(doc, position, &doc.source[s..e], env) {
+          Ok((v,p)) => {
+            if v.len() > 0 {
+              result.extend(v.into_iter());
+            }
+            position += p;
+          }
+          Err(err) => return Err(err),
+        }
+        changed = true;
       }
       Some(Part::GeneratedText(_)) | Some(Part::Comment(_, _)) => (),
       None => break,

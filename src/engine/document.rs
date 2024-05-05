@@ -190,7 +190,7 @@ impl Document {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum Part {
   StaticText(usize, usize),
   GeneratedText(String),
