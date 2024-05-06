@@ -1,5 +1,7 @@
 use core::slice::Iter;
 use std::iter::Peekable;
+use std::path::Path;
+use std::fs;
 
 use crate::engine::document::Document;
 use crate::engine::document::Part;
@@ -95,6 +97,52 @@ fn resolve_statement_call<'a>(
   }
 }
 
+fn resolve_statement_include<'a>(
+  env: &mut Environment,
+  source: &'a str,
+  iter_tokens: &mut Peekable<Iter<'_, Token>>,
+) -> Result<Part, String> {
+  let include_path: String;
+  loop {
+    match iter_tokens.next() {
+      Some(token) => match token {
+        Token::Space(_) => (),
+        &Token::Text(s, e) => {
+          include_path = source[s..e].to_string();
+          break;
+        }
+        &Token::Symbol(s, e) => {
+          let value = source[s..e].to_string();
+          include_path = match env.get(&value) {
+            Some(v) => v.clone(),
+            None => return Err(format!("undefined var '{}'", value)),
+          };
+          break;
+        }
+        t => {
+          return Err(format!(
+            "token {} not authorized in declarative block statement",
+            t
+          ))
+        }
+      },
+      None => return Err("unfinished declaration block".to_string()),
+    }
+  }
+  let path = Path::new(&include_path); 
+  if ! path.exists() {
+    return Err(format!("include path '{}' don't exist on local system", include_path));
+  }
+  if ! path.is_file() {
+    return Err(format!("include path '{}' isn't a file on local system", include_path));
+  }
+  let file_content = match fs::read_to_string(path) {
+    Ok(s) => s,
+    Err(err) => return Err(format!("error during include path : '{}' ", err)) 
+  };
+  Ok(Part::GeneratedText(file_content))
+}
+
 fn resolve_statement<'a>(
   doc: &'a Document,
   doc_position: usize,
@@ -132,6 +180,13 @@ fn resolve_statement<'a>(
           }
           Err(err) => return Err(format!("error in call block statement : {}", err)),
         },
+        "include" => match resolve_statement_include(env, source, &mut iter) {
+          Ok(v) => {
+            output.push(v);
+            break;
+          }
+          Err(err) => return Err(format!("error in include statement : {}", err)),
+        }
         s => return Err(format!("invalid action {} in statement", s)),
       },
       parser::Token::Space(_) => (),
