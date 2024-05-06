@@ -52,7 +52,6 @@ pub fn parse() -> Result<Configuration, String> {
       _ => (),
     }
   }
-  c.is_reentrant = true;
   Ok(c)
 }
 
