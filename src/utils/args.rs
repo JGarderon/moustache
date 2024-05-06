@@ -12,11 +12,10 @@ pub fn parse() -> Result<Configuration, String> {
     if arg.is_none() {
       break;
     }
-    let arg_next = iter.next();
     match arg.unwrap().as_ref() {
       "--help" | "-h" => c.is_helping(true),
       "--debug" | "-d" => c.is_debugging(true),
-      "--input" | "-i" => match arg_next {
+      "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
           return Err(format!(
@@ -24,7 +23,7 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--output" | "-o" => match arg_next {
+      "--output" | "-o" => match iter.peek() {
         Some(next_argument) => c.output = Some(next_argument.to_string()),
         None => {
           return Err(format!(
@@ -32,7 +31,7 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--var" | "-v" => match arg_next {
+      "--var" | "-v" => match iter.peek() {
         Some(next_argument) => {
           if let Some((k, v)) = next_argument.split_once('=') {
             c.variables.insert(k.to_string(), v.to_string());

@@ -1,7 +1,7 @@
 use core::slice::Iter;
+use std::fs;
 use std::iter::Peekable;
 use std::path::Path;
-use std::fs;
 
 use crate::engine::document::Document;
 use crate::engine::document::Part;
@@ -129,16 +129,22 @@ fn resolve_statement_include<'a>(
       None => return Err("unfinished declaration block".to_string()),
     }
   }
-  let path = Path::new(&include_path); 
-  if ! path.exists() {
-    return Err(format!("include path '{}' don't exist on local system", include_path));
+  let path = Path::new(&include_path);
+  if !path.exists() {
+    return Err(format!(
+      "include path '{}' don't exist on local system",
+      include_path
+    ));
   }
-  if ! path.is_file() {
-    return Err(format!("include path '{}' isn't a file on local system", include_path));
+  if !path.is_file() {
+    return Err(format!(
+      "include path '{}' isn't a file on local system",
+      include_path
+    ));
   }
   let file_content = match fs::read_to_string(path) {
     Ok(s) => s,
-    Err(err) => return Err(format!("error during include path : '{}' ", err)) 
+    Err(err) => return Err(format!("error during include path : '{}' ", err)),
   };
   Ok(Part::GeneratedText(file_content))
 }
@@ -186,7 +192,7 @@ fn resolve_statement<'a>(
             break;
           }
           Err(err) => return Err(format!("error in include statement : {}", err)),
-        }
+        },
         s => return Err(format!("invalid action {} in statement", s)),
       },
       parser::Token::Space(_) => (),
