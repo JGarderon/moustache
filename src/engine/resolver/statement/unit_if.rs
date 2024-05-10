@@ -28,7 +28,7 @@ enum ConditionPart {
   OrOperator,
   AndOperator,
   GroupOpening,
-  // GroupEnding,
+  GroupEnding,
 }
 
 #[derive(Debug)]
@@ -40,6 +40,7 @@ enum ResultTokenPosition {
 
 fn terminal(space_authorized: bool, token: Token, tokens: &Vec<&Token>, mut position: usize) -> ResultTokenPosition {
   loop {
+    println!("terminal - {:?}", tokens.get(position));
     match tokens.get(position) {
       Some(Token::Space(_)) if space_authorized => (),
       Some(t) if t == &&token => return ResultTokenPosition::True(position),
@@ -50,6 +51,7 @@ fn terminal(space_authorized: bool, token: Token, tokens: &Vec<&Token>, mut posi
 }
 
 fn exp_symbol_or_text<'a>(condition: &mut Condition, tokens: &Vec<&Token>, position: usize) -> ResultTokenPosition {
+  println!("exp_symbol_or_text - {:?}", tokens.get(position));
   match terminal(true, Token::Symbol(0,0), tokens, position) {
     ResultTokenPosition::True(p) => {
       match tokens.get(p) {
@@ -81,6 +83,7 @@ fn exp_symbol_or_text<'a>(condition: &mut Condition, tokens: &Vec<&Token>, posit
 }
 
 fn exp_operator<'a>(condition: &mut Condition, tokens: &Vec<&Token>, position: usize) -> ResultTokenPosition {
+  println!("exp_operator - {:?}", tokens.get(position));
   match terminal(true, Token::Ampersand, tokens, position) {
     ResultTokenPosition::True(p) => match terminal(true, Token::Ampersand, tokens, p+1) {
       ResultTokenPosition::True(p) => {
@@ -108,6 +111,7 @@ fn exp_operator<'a>(condition: &mut Condition, tokens: &Vec<&Token>, position: u
 }
 
 fn exp_comparator<'a>(condition: &mut Condition, tokens: &Vec<&Token>, mut position: usize) -> ResultTokenPosition {
+  println!("exp_comparator - {:?}", tokens.get(position));
   let mut next: bool = true; 
   match terminal(true, Token::Equal, tokens, position) {
     ResultTokenPosition::True(p) => {
@@ -139,6 +143,7 @@ fn exp_comparator<'a>(condition: &mut Condition, tokens: &Vec<&Token>, mut posit
 }
 
 fn exp_assertion<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut position: usize) -> ResultTokenPosition {
+  println!("exp_assertion - {:?}", tokens.get(position));
   match exp_symbol_or_text(condition, tokens, position) {
     ResultTokenPosition::True(p) => position = p+1,
     ResultTokenPosition::False => return ResultTokenPosition::False,
@@ -157,6 +162,7 @@ fn exp_assertion<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut pos
 }
 
 fn exp_assertions<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut position: usize) -> ResultTokenPosition {
+  println!("exp_assertions - {:?}", tokens.get(position));
   match exp_assertion(condition, tokens, position) {
     ResultTokenPosition::True(p) => position = p+1,
     ResultTokenPosition::False => return ResultTokenPosition::False,
@@ -168,7 +174,7 @@ fn exp_assertions<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut po
       ResultTokenPosition::False => break,
       ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(err),
     }
-    match exp_assertion(condition, tokens, position) {
+    match exp_group_or_assertions(condition, tokens, position) {
       ResultTokenPosition::True(p) => position = p+1,
       ResultTokenPosition::False => return ResultTokenPosition::False,
       ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(err),
@@ -178,6 +184,13 @@ fn exp_assertions<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut po
 }
 
 fn exp_group<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut position: usize) -> ResultTokenPosition {
+  println!("exp_group");
+  println!("exp_group - 1 {:?}", tokens.get(position));
+  while let Some(Token::Space(_)) = tokens.get(position) {
+    println!("exp_group - 1.1 {:?}", tokens.get(position));
+    position += 1;
+  }
+  println!("exp_group - 2 {:?}", tokens.get(position));
   match terminal(true, Token::ParenthesisOpening, tokens, position) {
     ResultTokenPosition::True(p) => {
       position = p+1;
@@ -186,28 +199,33 @@ fn exp_group<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut positio
     ResultTokenPosition::False => return ResultTokenPosition::False,
     ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(err),
   }
+  println!("exp_group - 3 {:?}", tokens.get(position));
   match exp_general(condition, tokens, position) {
     ResultTokenPosition::True(p) => position = p+1,
     ResultTokenPosition::False => return ResultTokenPosition::False,
     ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(format!("[exp_group] invalid group : assertions incorrect with error '{}'",err)),
   }
+  println!("exp_group - 4");
   match terminal(true, Token::ParenthesisEnding, tokens, position-1) {
     ResultTokenPosition::True(p) => {
       position = p+1;
-      // condition.parts.push(ConditionPart::GroupEnding);
+      condition.parts.push(ConditionPart::GroupEnding);
     }
     ResultTokenPosition::False => return ResultTokenPosition::Error("[exp_group] invalid group : no ending".to_string()),
     ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(format!("[exp_group] invalid group : no endingwith error '{}'",err)),
   }
+  println!("exp_group - 5");
   ResultTokenPosition::True(position)
 }
 
 fn exp_group_or_assertions<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, position: usize) -> ResultTokenPosition {
+  println!("exp_group_or_assertions - 1 {:?}", tokens.get(position));
   match exp_group(condition, tokens, position) {
     ResultTokenPosition::True(p) => return ResultTokenPosition::True(p),
     ResultTokenPosition::False => (),
     ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(err),
   }
+  println!("exp_group_or_assertions - 2 {:?}", tokens.get(position));
   match exp_assertions(condition, tokens, position) {
     ResultTokenPosition::True(p) => return ResultTokenPosition::True(p),
     ResultTokenPosition::False => return ResultTokenPosition::False,
@@ -249,49 +267,216 @@ fn parse_tokens<'a>(tokens: Vec<&Token>) -> Result<Condition,String> {
   }
 }
 
-fn resolve_exp<'a>(env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<bool,String> {
-  let p1 = match condition.parts.get(position) {
+// fn resolve_exp_suppl<'a>(state: bool, env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<Option<bool>,String> {
+//   let operator = match condition.parts.get(position) {
+//     Some(ConditionPart::OrOperator) => true,
+//     Some(ConditionPart::AndOperator) => false,
+//     Some(p) => return Err(format!("[resolve_exp] invalid part '{}' in condition (op)", p)), 
+//     None => return Ok(None),
+//   };
+//   if state && operator {
+//     return Ok(Some(true));
+//   }
+//   position += 1;
+//   match resolve_exp(env, source, condition, position) {
+//     Ok(r) => if operator {
+//       Ok(Some(state || r))
+//     } else {
+//       Ok(Some(state && r))
+//     }
+//     Err(err) => Err(err), 
+//   }
+// } 
+
+fn resolve_exp_assertion<'a>(env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<bool,String> {
+  let a1 = match condition.parts.get(position) {
     Some(ConditionPart::Symbol(s,e)) => {
       let key = source[*s..*e].to_string(); 
       match env.get(&key) {
         Some(v) => v.to_string(),
-        None => return Err(format!("env key '{}' unknow in condition", key))
+        None => return Err(format!("[resolve_exp_assertion] env key '{}' unknow in condition (p1)", key))
       }
     }
     Some(ConditionPart::Text(s,e)) => source[*s..*e].to_string(),
-    // Some(ConditionPart::GroupOpening) => match resolve_exp(doc, env, condition, position+1) {
-    //   Ok(v)
-    // }
-    // None => return Err("condition object can't be null".to_string()),
-    _ => "".to_string()
+    Some(c) => return Err(format!("[resolve_exp_assertion] invalid part '{:?}' in condition (p1)", c)), 
+    None => return Err("[resolve_exp_assertion] condition object can't be null (p1)".to_string()),
   };
   position += 1;
-  let operator = match condition.parts.get(position) {
+  let op_equal = match condition.parts.get(position) {
     Some(ConditionPart::EqualComparator) => true,
-    _ => false,
+    Some(ConditionPart::NonEqualComparator) => false,
+    Some(c) => return Err(format!("[resolve_exp_assertion] invalid part '{:?}' in condition (p1)", c)), 
+    None => return Err("[resolve_exp_assertion] condition object can't be null (p1)".to_string()),
   };
   position += 1;
-  let p2 = match condition.parts.get(position) {
+  let a2 = match condition.parts.get(position) {
     Some(ConditionPart::Symbol(s,e)) => {
       let key = source[*s..*e].to_string(); 
-      println!("{:?}", key);
       match env.get(&key) {
         Some(v) => v.to_string(),
-        None => return Err(format!("env key '{}' unknow in condition", key))
+        None => return Err(format!("[resolve_exp_assertion] env key '{}' unknow in condition (p1)", key))
       }
     }
     Some(ConditionPart::Text(s,e)) => source[*s..*e].to_string(),
-    // Some(ConditionPart::GroupOpening) => match resolve_exp(doc, env, condition, position+1) {
-    //   Ok(v)
-    // }
-    // None => return Err("condition object can't be null".to_string()),
-    _ => "".to_string()
+    Some(c) => return Err(format!("[resolve_exp_assertion] invalid part '{:?}' in condition (p1)", c)), 
+    None => return Err("[resolve_exp_assertion] condition object can't be null (p1)".to_string()),
   };
-  if operator {
-    Ok(p1 == p2)
+  if op_equal {
+    Ok(a1 == a2)
   } else {
-    Ok(p1 != p2)
+    Ok(a1 != a2)
   }
+}
+
+fn resolve_group_or_exp_rest<'a>(state: bool, env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<Option<(bool, usize)>,String> {
+  let op_or = match condition.parts.get(position) {
+    Some(ConditionPart::OrOperator) => true, 
+    Some(ConditionPart::AndOperator) => false, 
+    _ => return Ok(None)
+  };
+  position += 1;
+  let r = match resolve_exp_group_or_assertions(state, env, source, condition, position) {
+    Ok((r,p)) => {
+      position = p;
+      r
+    }
+    Err(err) => return Err(err)
+  };
+  if op_or {
+    Ok(Some((state || r, position)))
+  } else {
+    Ok(Some((state && r, position)))    
+  }
+}
+
+fn resolve_exp_assertion_and_rest<'a>(env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<(bool, usize),String> {
+  let mut state = match resolve_exp_assertion(env, source, condition, position) {
+    Ok(r) => r,
+    Err(err) => return Err(err),
+  };
+  position += 3;
+  loop { 
+    state = match resolve_group_or_exp_rest(state, env, source, condition, position) {
+      Ok(Some((r, p))) => {
+        position = p;
+        r
+      }
+      Ok(None) => break,
+      Err(err) => return Err(err), 
+    };
+  }
+  Ok((state, position))
+}
+
+fn resolve_exp_group<'a>(mut state: bool, env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<(bool, usize),String> {
+  state = match resolve_exp_group_or_assertions(state, env, source, condition, position) {
+    Ok((r, p)) => {
+      position = p;
+      r 
+    }
+    Err(err) => return Err(err),
+  };
+  if let Some(ConditionPart::GroupEnding) = condition.parts.get(position) {
+    Ok((state, position))
+  } else {
+    Err("[resolve_exp_group] group ending not found".to_string()) 
+  }
+}
+
+fn resolve_exp_group_or_assertions<'a>(mut state: bool, env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<(bool, usize),String> {
+  match condition.parts.get(position) {
+    Some(ConditionPart::GroupOpening) => match resolve_exp_group(state, env, source, condition, position+1) {
+      Ok((r, p)) => {
+        position = p;
+        state = r;
+      }
+      Err(err) => return Err(err),
+    }
+    _ => match resolve_exp_assertion_and_rest(env, source, condition, position) {
+      Ok((r, p)) => {
+        position = p;
+        state = r;
+      }
+      Err(err) => return Err(err),
+    }
+  }
+  Ok((state, position))
+}
+
+fn resolve_exp<'a>(env: &Environment, source: &'a str, condition: &Condition, mut position: usize) -> Result<bool,String> {
+    println!("{:?}", resolve_exp_group_or_assertions(true, env, source, condition, position));
+
+  // let mut r1: Option<bool> = None; 
+  // let mut r: bool = false; 
+  // let mut comparator: bool = bool;
+  // let mut operator: bool = bool;
+  // let p1 = match condition.parts.get(position) {
+  //   Some(ConditionPart::Symbol(s,e)) => {
+  //     let key = source[*s..*e].to_string(); 
+  //     match env.get(&key) {
+  //       Some(v) => v.to_string(),
+  //       None => return Err(format!("[resolve_exp] env key '{}' unknow in condition (p1)", key))
+  //     }
+  //   }
+  //   Some(ConditionPart::Text(s,e)) => source[*s..*e].to_string(),
+  //   Some(ConditionPart::GroupOpening) => match resolve_exp(doc, env, condition, position+1) {
+  //     Ok(v) => r1 = Some(v),
+  //     Err(err) => return Err(err),
+  //   }
+  //   Some(c) => return Err(format!("[resolve_exp] invalid part '{}' in condition (p1)", c)), 
+  //   None => return Err("[resolve_exp] condition object can't be null (p1)".to_string()),
+  // };
+  // if r1 == None {
+  //   position += 1;
+  //   comparator = match condition.parts.get(position) {
+  //     Some(ConditionPart::EqualComparator) => true,
+  //     Some(ConditionPart::NonEqualComparator) => false,
+  //     Some(p) => return Err(format!("[resolve_exp] invalid part '{}' in condition (op)", p)), 
+  //     None => return Err("[resolve_exp] condition object can't be null (op)".to_string()),
+  //   };
+  //   position += 1;
+  //   let p2 = match condition.parts.get(position) {
+  //     Some(ConditionPart::Symbol(s,e)) => {
+  //       let key = source[*s..*e].to_string(); 
+  //       match env.get(&key) {
+  //         Some(v) => v.to_string(),
+  //         None => return Err(format!("[resolve_exp] env key '{}' unknow in condition (p2)", key))
+  //       }
+  //     }
+  //     Some(ConditionPart::Text(s,e)) => source[*s..*e].to_string(),
+  //     Some(ConditionPart::GroupOpening) => match resolve_exp(doc, env, condition, position+1) {
+  //       Ok(v) => r1 = Some(v),
+  //       Err(err) => return Err(err),
+  //     }
+  //     None => return Err("[resolve_exp] condition object can't be null (p2)".to_string()),
+  //     Some(c) => return Err(format!("[resolve_exp] invalid part '{}' in condition (p2)", c)), 
+  //   };
+  // } else {
+  //   position += 1;
+  //   operator = match condition.parts.get(position) {
+  //     Some(ConditionPart::OrOperator) => true,
+  //     Some(ConditionPart::AndOperator) => false,
+  //     Some(p) => return Err(format!("[resolve_exp] invalid part '{}' in condition (op)", p)), 
+  //     None => return Err("[resolve_exp] condition object can't be null (op)".to_string()),
+  //   };
+  //   if let Some(true) == r1 && operator {
+  //     return Ok(true)
+  //   }
+  //   r = r1.unwrap();
+  //   position += 1;
+  //   match resolve_exp_suppl(r, doc, env, condition, position) {
+  //     Ok(v) => r = v,
+  //     Err(err) => return Err(err),
+  //   }
+  // }
+  
+
+  // if comparator {
+  //   Ok(p1 == p2)
+  // } else {
+  //   Ok(p1 != p2)
+  // }
+  Ok(false)
 }
 
 fn resolve_condition<'a>(env: &Environment, source: &'a str, condition: Condition) -> Result<bool,String> {
