@@ -1,6 +1,8 @@
 use std::fmt;
+use std::cmp::PartialEq;
 
 // #[derive(Debug)]
+// #[derive(PartialEq)]
 pub enum Token {
   Symbol(usize, usize),
   Text(usize, usize),
@@ -14,6 +16,30 @@ pub enum Token {
   Multiply,
   Escape,
   Pipe,
+  Ampersand,
+  Exclamation,
+}
+
+impl PartialEq<Token> for Token {
+  fn eq(&self, other: &Token) -> bool {
+    match (self, other) {
+      (Token::Symbol(_, _), Token::Symbol(_, _)) => true,
+      (Token::Text(_, _), Token::Text(_, _)) => true,
+      (Token::Space(_),Token::Space(_)) => true,
+      (Token::ParenthesisOpening, Token::ParenthesisOpening) => true,
+      (Token::ParenthesisEnding, Token::ParenthesisEnding) => true,
+      (Token::Plus, Token::Plus) => true,
+      (Token::Minus, Token::Minus) => true,
+      (Token::Equal, Token::Equal) => true,
+      (Token::Divide, Token::Divide) => true,
+      (Token::Multiply, Token::Multiply) => true,
+      (Token::Escape, Token::Escape) => true,
+      (Token::Pipe, Token::Pipe) => true,
+      (Token::Ampersand, Token::Ampersand) => true,
+      (Token::Exclamation, Token::Exclamation) => true,
+      _ => false
+    }
+  }
 }
 
 impl fmt::Debug for Token {
@@ -31,6 +57,8 @@ impl fmt::Debug for Token {
       Token::Multiply => write!(f, "Token::Multiply"),
       Token::Escape => write!(f, "Token::Escape"),
       Token::Pipe => write!(f, "Token::Pipe"),
+      Token::Ampersand => write!(f, "Token::Ampersand"),
+      Token::Exclamation => write!(f, "Token::Exclamation"),
     }
   }
 }
@@ -50,10 +78,13 @@ impl fmt::Display for Token {
       Token::Multiply => write!(f, "Token::Multiply"),
       Token::Escape => write!(f, "Token::Escape"),
       Token::Pipe => write!(f, "Token::Pipe"),
+      Token::Ampersand => write!(f, "Token::Ampersand"),
+      Token::Exclamation => write!(f, "Token::Exclamation"),
     }
   }
 }
 
+#[derive(PartialEq)]
 #[derive(Debug)]
 pub enum TokenSpace {
   Space,
@@ -153,6 +184,20 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Pipe);
+        portion_start = i + 1;
+      }
+      '&' if is_text == false => {
+        if portion_start < i - 1 {
+          stack.push(Token::Symbol(portion_start, i));
+        }
+        stack.push(Token::Ampersand);
+        portion_start = i + 1;
+      }
+      '!' if is_text == false => {
+        if portion_start < i - 1 {
+          stack.push(Token::Symbol(portion_start, i));
+        }
+        stack.push(Token::Exclamation);
         portion_start = i + 1;
       }
       '\\' => {

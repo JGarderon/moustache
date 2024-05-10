@@ -26,13 +26,13 @@ impl Environment {
   pub fn set(&mut self, key: String, value: String) {
     self.stack.insert(key, value);
   }
-  pub fn get(&mut self, key: &String) -> Option<&String> {
+  pub fn get(&self, key: &String) -> Option<&String> {
     self.stack.get(key)
   }
   pub fn set_block(&mut self, key: String, value: Vec<Part>) {
     self.blocks.insert(key, value);
   }
-  pub fn get_block(&mut self, key: &String) -> Option<&Vec<Part>> {
+  pub fn get_block(&self, key: &String) -> Option<&Vec<Part>> {
     self.blocks.get(key)
   }
 }
