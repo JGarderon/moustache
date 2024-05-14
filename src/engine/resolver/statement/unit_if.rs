@@ -264,9 +264,6 @@ fn exp_general<'a>(condition: &mut Condition, tokens: &Vec<&'a Token>, mut posit
 }
 
 fn parse_tokens<'a>(tokens: Vec<&Token>) -> Result<Condition,String> {
-  for (i, t) in tokens.iter().enumerate() {
-    println!("{:?} - {:?}", i, t);
-  }
   if tokens.len() == 0 {
     return Err("condition is blank".to_string());
   }
@@ -299,7 +296,6 @@ fn resolve_exp<'a>(env: &Environment, source: &'a str, condition: &Condition, mu
       }
       Some(ConditionPart::Assertion(_, _, _, _, _, _, _)) if operator_and == None && beginning == false => return Err("internal error : invalid logic in expression resolver in condition (no operator found between two assertions)".to_string()), 
       Some(ConditionPart::Assertion(is_equal, first_is_symbol, first_start, first_end, second_is_symbol, second_start, second_end)) => {
-        operator_and = None;
         let first: String;
         if *first_is_symbol {
           let key: String = source[*first_start..*first_end].to_string();
@@ -328,8 +324,12 @@ fn resolve_exp<'a>(env: &Environment, source: &'a str, condition: &Condition, mu
         }
         if operator_and == Some(true) {
           result &= r; 
-        } else {
-          return Ok((result, position+1));
+          operator_and = None;
+        } else if operator_and == Some(false) {
+          result |= r; 
+          operator_and = None;
+        } else { 
+          result = r;
         }
       }
       Some(ConditionPart::GroupOpening) => match resolve_exp(env, source, condition, position+1) {
@@ -351,7 +351,6 @@ fn resolve_exp<'a>(env: &Environment, source: &'a str, condition: &Condition, mu
 }
 
 fn resolve_condition<'a>(env: &Environment, source: &'a str, condition: Condition) -> Result<bool,String> {
-  println!("{:?}", condition.parts);
   match resolve_exp(env, source, &condition, 0) {
     Ok((r,_)) => Ok(r),
     Err(err) => Err(err), 
@@ -385,12 +384,10 @@ pub fn resolve_unit<'a>(
     Ok(c) => c, 
     Err(err) => return Err(format!("error during conditional tokens parsing : {}", err))
   };
-  println!("if_block condition = {:?}", condition);
   let result = match resolve_condition(env, source, condition) {
     Ok(r) => r, 
     Err(err) => return Err(format!("error during conditional tokens resolving : {}", err))
   };
-  println!("if_block result = {:?}", result);
   if result {
     Ok(block_ending_position)
   } else {
