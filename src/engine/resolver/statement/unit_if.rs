@@ -363,7 +363,7 @@ pub fn resolve_unit<'a>(
   env: &mut Environment,
   source: &'a str,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
-) -> Result<usize, String> {
+) -> Result<(Vec<Part>,usize), String> {
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
   loop {
@@ -389,8 +389,8 @@ pub fn resolve_unit<'a>(
     Err(err) => return Err(format!("error during conditional tokens resolving : {}", err))
   };
   if result {
-    Ok(block_ending_position)
+    Ok((doc.stack[doc_position+1..doc_position+block_ending_position-1].to_vec(), block_ending_position))
   } else {
-    Ok(block_ending_position)
+    Ok((vec!(),block_ending_position))
   }
 }

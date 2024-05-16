@@ -53,7 +53,6 @@ fn main() {
 
   let mut reentrance: usize = 0;
   loop {
-    reentrance += 1;
     if conf.is_debugging {
       println!("--- Reentrance n°{:?}", reentrance);
     }
@@ -85,7 +84,9 @@ fn main() {
         if changed {
           doc = doc.transform();
         } else {
-          println!("Resolve parts = nothing to do (no change)");
+          if conf.is_debugging && reentrance > 0 {
+            println!("Resolve parts = nothing to do (no change)");
+          }
           break;
         }
       }
@@ -97,6 +98,7 @@ fn main() {
     if conf.is_reentrant == false {
       break;
     }
+    reentrance += 1;
   }
 
   match conf.output {

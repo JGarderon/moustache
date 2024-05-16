@@ -65,7 +65,8 @@ pub fn resolve_statement<'a>(
           Err(err) => return Err(format!("error in include statement : {}", err)),
         },
         "if" => match resolve_statement_if(doc, doc_position, env, source, &mut iter) {
-          Ok(p) => {
+          Ok((v,p)) => {
+            output.extend(v);
             position_skip = p;
             break;
           }
