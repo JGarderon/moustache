@@ -17,6 +17,10 @@ fn main() {
     utils::args::display_helping();
     std::process::exit(0);
   }
+  if conf.display_version {
+    utils::args::display_version();
+    std::process::exit(0);
+  }
   if conf.is_debugging {
     println!("conf = {:?}", conf);
   }

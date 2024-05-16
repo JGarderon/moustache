@@ -6,3 +6,10 @@ authors = ["Julien Garderon <julien.garderon@gmail.com>"]
 
 # [dependencies]
 # utils_macro = { path = "./utils_macro" }
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"

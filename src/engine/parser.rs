@@ -1,5 +1,5 @@
-use std::fmt;
 use std::cmp::PartialEq;
+use std::fmt;
 
 // #[derive(Debug)]
 // #[derive(PartialEq)]
@@ -25,7 +25,7 @@ impl PartialEq<Token> for Token {
     match (self, other) {
       (Token::Symbol(_, _), Token::Symbol(_, _)) => true,
       (Token::Text(_, _), Token::Text(_, _)) => true,
-      (Token::Space(_),Token::Space(_)) => true,
+      (Token::Space(_), Token::Space(_)) => true,
       (Token::ParenthesisOpening, Token::ParenthesisOpening) => true,
       (Token::ParenthesisEnding, Token::ParenthesisEnding) => true,
       (Token::Plus, Token::Plus) => true,
@@ -37,7 +37,7 @@ impl PartialEq<Token> for Token {
       (Token::Pipe, Token::Pipe) => true,
       (Token::Ampersand, Token::Ampersand) => true,
       (Token::Exclamation, Token::Exclamation) => true,
-      _ => false
+      _ => false,
     }
   }
 }
@@ -84,8 +84,7 @@ impl fmt::Display for Token {
   }
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum TokenSpace {
   Space,
   Tabulation,
