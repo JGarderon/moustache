@@ -1,40 +1,10 @@
-use crate::engine::document::Document;
 use crate::engine::document::Part;
-use crate::engine::environment::Environment;
 use crate::engine::parser;
+use crate::engine::resolver::add_string_to_another;
+use crate::engine::Document;
+use crate::engine::Environment;
 
-#[derive(Debug)]
-pub struct Resolved {
-  pub changed: bool,
-  pub stack: Vec<Part>,
-}
-
-fn add_string_to_another(s1: &mut String, s2: &mut String) {
-  s1.retain(|c| !r#"\"#.contains(c));
-  s2.push_str(s1);
-}
-
-// #[allow(unused_mut)]
-// #[allow(unused_variables)]
-// fn resolve_statement<'a>(
-//   _doc: &'a Document,
-//   expr: &'a str,
-//   env: &mut Environment,
-// ) -> Result<Part, String> {
-//   let source: &str = &expr[2..expr.len() - 2];
-//   println!("{:?}", source);
-//   let tokens: Vec<parser::Token> = match parser::parse(source) {
-//     Ok(t) => t,
-//     Err(err) => return Err(err),
-//   };
-//   let mut output = "".to_string();
-//   let mut iter = tokens.iter().peekable();
-//   let mut is_begining: bool = true;
-//   println!("--> {:?}", tokens);
-//   Ok(Part::GeneratedText(output))
-// }
-
-fn resolve_expression<'a>(
+pub fn resolve_expression<'a>(
   _doc: &'a Document,
   expr: &'a str,
   env: &mut Environment,
@@ -121,40 +91,4 @@ fn resolve_expression<'a>(
     }
   }
   Ok(Part::GeneratedText(output))
-}
-
-pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved, String> {
-  let mut position: usize = 0;
-  let max: usize = doc.stack_len();
-  let mut result: Vec<Part> = vec![];
-  let mut changed: bool = false;
-  loop {
-    if position >= max {
-      break;
-    }
-    match doc.stack_get(position) {
-      Some(&Part::StaticText(s, e)) => result.push(Part::StaticText(s, e)),
-      Some(&Part::Expression(s, e)) => {
-        match resolve_expression(doc, &doc.source[s..e], env) {
-          Ok(p) => result.push(p),
-          Err(err) => return Err(err),
-        }
-        changed = true;
-      }
-      Some(&Part::Statement(_s, _e)) => {
-        // match resolve_statement(doc, &doc.source[s..e], env) {
-        //   Ok(p) => result.push(p),
-        //   Err(err) => return Err(err),
-        // }
-        // changed = true;
-      }
-      Some(Part::GeneratedText(_)) | Some(Part::Comment(_, _)) => (),
-      None => break,
-    }
-    position += 1;
-  }
-  Ok(Resolved {
-    changed: changed,
-    stack: result,
-  })
 }

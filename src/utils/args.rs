@@ -1,6 +1,10 @@
-// use std::collections::HashMap;
 use std::env;
+
 // use utils_macro::modifier_item;
+use crate::utils::APP_AUTHOR;
+use crate::utils::APP_DATE;
+use crate::utils::APP_NAME;
+use crate::utils::APP_VERSION;
 
 use crate::utils::conf::Configuration;
 
@@ -12,11 +16,11 @@ pub fn parse() -> Result<Configuration, String> {
     if arg.is_none() {
       break;
     }
-    let arg_next = iter.next();
     match arg.unwrap().as_ref() {
       "--help" | "-h" => c.is_helping(true),
       "--debug" | "-d" => c.is_debugging(true),
-      "--input" | "-i" => match arg_next {
+      "--version" => c.display_version(true),
+      "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
           return Err(format!(
@@ -24,7 +28,7 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--output" | "-o" => match arg_next {
+      "--output" | "-o" => match iter.peek() {
         Some(next_argument) => c.output = Some(next_argument.to_string()),
         None => {
           return Err(format!(
@@ -32,13 +36,13 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--var" | "-v" => match arg_next {
+      "--var" | "-v" => match iter.peek() {
         Some(next_argument) => {
           if let Some((k, v)) = next_argument.split_once('=') {
             c.variables.insert(k.to_string(), v.to_string());
           } else {
             return Err(format!(
-              "the variable in the command line parameters is invalid"
+              "the value of variable in the command line parameters is invalid"
             ));
           }
         }
@@ -52,15 +56,14 @@ pub fn parse() -> Result<Configuration, String> {
       _ => (),
     }
   }
-  c.is_reentrant = true;
   Ok(c)
 }
 
 // #[modifier_item("--help","help")]
 pub fn display_helping() {
   println!(
-    "Moustache - v0.0.1 (april 2024)
-by Julien Garderon <julien.garderon@gmail.com>
+    "{} - {} ({})
+by {}
 
   --help      | -h    display this message and exit (0)
   --debug     | -d    display the debug
@@ -68,6 +71,12 @@ by Julien Garderon <julien.garderon@gmail.com>
   --output    | -o    output of process (path)
   --var       | -v    add var to env 
   --reentrant | -r    document is reentrant 
-"
+",
+    APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
   );
+}
+
+// #[modifier_item("--help","help")]
+pub fn display_version() {
+  println!("{}", APP_VERSION);
 }

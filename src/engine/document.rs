@@ -30,7 +30,7 @@ impl Document {
     self.stack.get(position)
   }
   pub fn parse_parts(&mut self) -> Result<bool, String> {
-    let iter = self.source.char_indices().collect::<Vec<(usize,char)>>();
+    let iter = self.source.char_indices().collect::<Vec<(usize, char)>>();
     if iter.len() == 0 {
       return Ok(false);
     }
@@ -43,7 +43,11 @@ impl Document {
         match (w1, w2) {
           ('{', '{') => {
             match part_type {
-              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              Part::StaticText(y, _) => {
+                if y < i {
+                  self.stack.push(Part::StaticText(y, i))
+                }
+              }
               p => {
                 return Err(format!(
                   "not authorized : start another part 'Expression' in {:?} part",
@@ -67,7 +71,11 @@ impl Document {
           }
           ('{', '%') => {
             match part_type {
-              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              Part::StaticText(y, _) => {
+                if y < i {
+                  self.stack.push(Part::StaticText(y, i))
+                }
+              }
               p => {
                 return Err(format!(
                   "not authorized : start another part 'Statement' in {:?} part",
@@ -91,7 +99,11 @@ impl Document {
           }
           ('{', '#') => {
             match part_type {
-              Part::StaticText(y, _) => self.stack.push(Part::StaticText(y, i)),
+              Part::StaticText(y, _) => {
+                if y < i {
+                  self.stack.push(Part::StaticText(y, i))
+                }
+              }
               p => {
                 return Err(format!(
                   "not authorized : start another part 'Comment' in {:?} part",
@@ -190,7 +202,7 @@ impl Document {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Part {
   StaticText(usize, usize),
   GeneratedText(String),
