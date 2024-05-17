@@ -171,7 +171,7 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
         stack.push(Token::Divide);
         portion_start = i + 1;
       }
-      '/' if is_text == false => {
+      '*' if is_text == false => {
         if portion_start < i - 1 {
           stack.push(Token::Symbol(portion_start, i));
         }
