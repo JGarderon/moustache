@@ -1,6 +1,6 @@
-pub mod extensions;
 mod document;
 mod environment;
+pub mod extensions;
 mod parser;
 mod resolver;
 

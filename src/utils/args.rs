@@ -92,6 +92,4 @@ by {}
     APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
   );
   println!("helping extensions = {:?}", default::help());
-
-
 }

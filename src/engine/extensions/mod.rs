@@ -7,40 +7,41 @@ use crate::engine::Environment;
 pub enum Value {
   Text(String),
   Symbol(String),
-  Number(f64),
+  // Number(f64),
   Vector(Vec<Value>),
+  True,
+  False,
   Void,
 }
 
 #[derive(Debug)]
-pub struct Context<'a, 'b> {
-  begining: bool,
-  anterior_result: &'b Value,
-  doc: &'a Document,
-  doc_position: usize,
-  env: &'a mut Environment,
-  fct_name: &'b str,
-  args: Vec<Value>,
+pub struct Context<'a> {
+  pub begining: bool,
+  pub result: Option<Value>,
+  pub doc: &'a Document,
+  pub doc_position: usize,
+  pub env: &'a mut Environment,
+  pub source: &'a str,
+  pub fct_name: String,
+  pub args: Vec<Value>,
 }
 
-impl<'a, 'b> Context<'a, 'b> {
+impl<'a> Context<'a> {
   pub fn new(
-    begining: bool,
-    anterior_result: &'b Value,
     doc: &'a Document,
     doc_position: usize,
     env: &'a mut Environment,
-    fct_name: &'b str,
-    args: Vec<Value>,
+    source: &'a str,
   ) -> Self {
     Context {
-      begining,
-      anterior_result,
-      doc,
-      doc_position,
-      env,
-      fct_name,
-      args,
+      begining: true,
+      result: None,
+      doc: doc,
+      doc_position: doc_position,
+      env: env,
+      source: source,
+      fct_name: "".to_string(),
+      args: vec![],
     }
   }
 }
