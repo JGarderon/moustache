@@ -1,6 +1,7 @@
 use std::env;
 
 // use utils_macro::modifier_item;
+use crate::engine::extensions::default;
 use crate::utils::APP_AUTHOR;
 use crate::utils::APP_DATE;
 use crate::utils::APP_NAME;
@@ -18,6 +19,7 @@ pub fn parse() -> Result<Configuration, String> {
     }
     match arg.unwrap().as_ref() {
       "--help" | "-h" => c.is_helping(true),
+      "--help-extensions" => c.is_helping_extensions(true),
       "--debug" | "-d" => c.is_debugging(true),
       "--version" => c.display_version(true),
       "--input" | "-i" => match iter.peek() {
@@ -79,4 +81,17 @@ by {}
 // #[modifier_item("--help","help")]
 pub fn display_version() {
   println!("{}", APP_VERSION);
+}
+
+pub fn display_helping_extensions() {
+  println!(
+    "{} - {} ({})
+by {}
+
+  Extensions documentation",
+    APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
+  );
+  println!("helping extensions = {:?}", default::help());
+
+
 }

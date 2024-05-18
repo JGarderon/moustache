@@ -1,3 +1,4 @@
+pub mod extensions;
 mod document;
 mod environment;
 mod parser;

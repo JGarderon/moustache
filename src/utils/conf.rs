@@ -6,6 +6,7 @@ pub struct Configuration {
   pub output: Option<String>,
   pub variables: HashMap<String, String>,
   pub is_helping: bool,
+  pub is_helping_extensions: bool,
   pub is_debugging: bool,
   pub is_reentrant: bool,
   pub display_version: bool,
@@ -18,6 +19,7 @@ impl Configuration {
       output: None,
       variables: HashMap::new(),
       is_helping: false,
+      is_helping_extensions: false,
       is_debugging: false,
       is_reentrant: false,
       display_version: false,
@@ -25,6 +27,9 @@ impl Configuration {
   }
   pub fn is_helping(&mut self, v: bool) {
     self.is_helping = v;
+  }
+  pub fn is_helping_extensions(&mut self, v: bool) {
+    self.is_helping_extensions = v;
   }
   pub fn is_debugging(&mut self, v: bool) {
     self.is_debugging = v;

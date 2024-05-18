@@ -1,5 +1,6 @@
 pub mod unit_block;
 pub mod unit_call;
+pub mod unit_execute;
 pub mod unit_if;
 pub mod unit_include;
 pub mod unit_set;
@@ -12,6 +13,7 @@ use crate::engine::parser::Token;
 
 use crate::engine::resolver::statement::unit_block::resolve_unit as resolve_statement_block;
 use crate::engine::resolver::statement::unit_call::resolve_unit as resolve_statement_call;
+use crate::engine::resolver::statement::unit_execute::resolve_unit as resolve_statement_execute;
 use crate::engine::resolver::statement::unit_if::resolve_unit as resolve_statement_if;
 use crate::engine::resolver::statement::unit_include::resolve_unit as resolve_statement_include;
 use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
@@ -77,6 +79,10 @@ pub fn resolve_statement<'a>(
         "set" => match resolve_statement_set(env, source, &mut iter) {
           Ok(_) => break,
           Err(err) => return Err(format!("error in 'set' statement : {}", err)),
+        },
+        "execute" => match resolve_statement_execute(doc, doc_position, env, source, &mut iter) {
+          Ok(_) => break,
+          Err(err) => return Err(format!("error in 'execute' statement : {}", err)),
         },
         s => return Err(format!("invalid action '{}' in statement", s)),
       },
