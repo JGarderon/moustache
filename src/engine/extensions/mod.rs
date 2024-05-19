@@ -18,7 +18,7 @@ pub enum Value {
 pub struct Context<'a> {
   pub begining: bool,
   pub result: Option<Value>,
-  pub doc: &'a Document,
+  pub doc: &'a Document<'a>,
   pub doc_position: usize,
   pub env: &'a mut Environment,
   pub source: &'a str,

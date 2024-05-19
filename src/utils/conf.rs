@@ -10,6 +10,7 @@ pub struct Configuration {
   pub is_debugging: bool,
   pub is_reentrant: bool,
   pub display_version: bool,
+  pub no_extensions: bool,
 }
 
 impl Configuration {
@@ -23,6 +24,7 @@ impl Configuration {
       is_debugging: false,
       is_reentrant: false,
       display_version: false,
+      no_extensions: false,
     }
   }
   pub fn is_helping(&mut self, v: bool) {
@@ -39,5 +41,8 @@ impl Configuration {
   }
   pub fn display_version(&mut self, v: bool) {
     self.display_version = v;
+  }
+  pub fn no_extensions(&mut self, v: bool) {
+    self.no_extensions = v;
   }
 }

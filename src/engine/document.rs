@@ -2,23 +2,27 @@ use std::fs;
 
 use crate::engine::environment;
 use crate::engine::resolver;
+use crate::utils::conf::Configuration;
 
 #[derive(Debug)]
-pub struct Document {
+pub struct Document<'c> {
+  pub conf: &'c Configuration,
   pub source: String,
   pub stack: Vec<Part>,
 }
 
 #[allow(dead_code)]
-impl Document {
-  pub fn new(source: String) -> Self {
+impl<'c> Document<'c> {
+  pub fn new(conf: &'c Configuration, source: String) -> Self {
     Document {
-      source: source,
+      conf,
+      source,
       stack: vec![],
     }
   }
-  pub fn from_str<'a>(source: &'a str) -> Self {
+  pub fn from_str<'a>(conf: &'c Configuration, source: &'a str) -> Self {
     Document {
+      conf,
       source: source.to_string(),
       stack: vec![],
     }
@@ -165,7 +169,7 @@ impl Document {
     string.push_str("\n---\n");
     return string;
   }
-  pub fn transform(self) -> Self {
+  pub fn transform(&mut self) {
     let mut destination: String = "".to_string();
     for p in &self.stack {
       match p {
@@ -176,10 +180,8 @@ impl Document {
         Part::Comment(_, _) => (),
       }
     }
-    Document {
-      source: destination,
-      stack: vec![],
-    }
+    self.stack = vec!();
+    self.source = destination;
   }
   pub fn resolve(&mut self, env: &mut environment::Environment) -> Result<bool, String> {
     match resolver::resolve(self, env) {

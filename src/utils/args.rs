@@ -22,6 +22,8 @@ pub fn parse() -> Result<Configuration, String> {
       "--help-extensions" => c.is_helping_extensions(true),
       "--debug" | "-d" => c.is_debugging(true),
       "--version" => c.display_version(true),
+      "--reentrant" | "-r" => c.is_reentrant(true),
+      "--no-extensions" => c.no_extensions(true),
       "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
@@ -54,7 +56,6 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--reentrant" | "-r" => c.is_reentrant(true),
       _ => (),
     }
   }
@@ -80,6 +81,7 @@ by {}
   --reentrant | -r    document is reentrant 
 
   --help-extensions   display extensions documentation and exit (0)
+  --no-extensions     disable extensions (with error)
 ");
   }
 }

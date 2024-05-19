@@ -33,7 +33,7 @@ fn main() {
 
   let mut buffer = String::new();
   match conf.input {
-    Some(path) => match File::open(path) {
+    Some(ref path) => match File::open(path) {
       Ok(mut fd) => match fd.read_to_string(&mut buffer) {
         Ok(_) => (),
         Err(err) => {
@@ -57,7 +57,7 @@ fn main() {
       }
     },
   };
-  let mut doc = engine::Document::new(buffer);
+  let mut doc = engine::Document::new(&conf, buffer);
 
   let mut reentrance: usize = 0;
   loop {
@@ -90,7 +90,7 @@ fn main() {
           println!("Resolved, source changed = {:?}", changed);
         }
         if changed {
-          doc = doc.transform();
+          doc.transform();
         } else {
           if conf.is_debugging && reentrance > 0 {
             println!("Resolve parts = nothing to do (no change)");
@@ -109,7 +109,7 @@ fn main() {
     reentrance += 1;
   }
 
-  match conf.output {
+  match &doc.conf.output {
     Some(path) => match doc.write(&path[..]) {
       Some(err) => {
         println!("Error during write output = {:?}", err);

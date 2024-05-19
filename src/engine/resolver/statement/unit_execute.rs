@@ -123,6 +123,9 @@ pub fn resolve_unit<'a>(
   source: &'a str,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
 ) -> Result<(), String> {
+  if doc.conf.no_extensions {
+    return Err("execute statement found : not authorized by conf".to_string());
+  }
   let key: String;
   loop {
     let token = match iter_tokens.next() {
