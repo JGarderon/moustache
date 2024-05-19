@@ -7,7 +7,7 @@ use crate::engine::Environment;
 pub enum Value {
   Text(String),
   Symbol(String),
-  // Number(f64),
+  Number(f64),
   Vector(Vec<Value>),
   True,
   False,
@@ -51,8 +51,23 @@ pub struct Helper {
   module_name: &'static str,
   module_description: &'static str,
   module_autor: &'static str,
-  module_version: &'static str,
   functions: Vec<HelperFunction>,
+}
+
+impl Helper {
+  pub fn display(&self) {
+    println!("
+  ♦ Extension '{}' - by {} 
+    {}", 
+      self.module_name,
+      self.module_autor,
+      self.module_description
+    );
+    for f in self.functions.iter() {
+      f.display();
+    }
+    println!("");
+  }
 }
 
 #[derive(Debug)]
@@ -61,4 +76,18 @@ struct HelperFunction {
   function_description: &'static str,
   function_can_pipe: bool,
   function_args: &'static str,
+}
+
+impl HelperFunction {
+  fn display(&self) {
+    println!("
+    ↪ function '{}' (pipe : {}) 
+      description : {}
+      args : {}", 
+      self.function_name,
+      if self.function_can_pipe { "yes" } else { "no" },
+      self.function_description,
+      self.function_args,
+    );
+  }
 }

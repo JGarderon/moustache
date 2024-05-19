@@ -62,20 +62,26 @@ pub fn parse() -> Result<Configuration, String> {
 }
 
 // #[modifier_item("--help","help")]
-pub fn display_helping() {
-  println!(
-    "{} - {} ({})
+pub fn display_helping(resume: bool) {
+  print!(
+    "
+{} - {} ({})
 by {}
-
+",
+    APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
+  );
+  if resume {
+    println!("
   --help      | -h    display this message and exit (0)
   --debug     | -d    display the debug
   --input     | -i    input of process (path ; else stdin)
   --output    | -o    output of process (path)
   --var       | -v    add var to env 
   --reentrant | -r    document is reentrant 
-",
-    APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
-  );
+
+  --help-extensions   display extensions documentation and exit (0)
+");
+  }
 }
 
 // #[modifier_item("--help","help")]
@@ -84,12 +90,27 @@ pub fn display_version() {
 }
 
 pub fn display_helping_extensions() {
-  println!(
-    "{} - {} ({})
-by {}
-
-  Extensions documentation",
-    APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
+  display_helping(false); 
+  print!("
+Extensions documentation
+------------------------
+"
   );
-  println!("helping extensions = {:?}", default::help());
+  default::help().display();
 }
+// #[derive(Debug)]
+// pub struct Helper {
+//   module_name: &'static str,
+//   module_description: &'static str,
+//   module_autor: &'static str,
+//   module_version: &'static str,
+//   functions: Vec<HelperFunction>,
+// }
+
+// #[derive(Debug)]
+// struct HelperFunction {
+//   function_name: &'static str,
+//   function_description: &'static str,
+//   function_can_pipe: bool,
+//   function_args: &'static str,
+// }

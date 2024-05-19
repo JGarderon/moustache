@@ -14,7 +14,7 @@ fn main() {
     }
   };
   if conf.is_helping {
-    utils::args::display_helping();
+    utils::args::display_helping(true);
     std::process::exit(0);
   }
   if conf.is_helping_extensions {

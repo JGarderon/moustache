@@ -84,19 +84,18 @@ fn resolve_fct<'a>(
 }
 
 fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String> {
-  let mut value: String = "".to_string();
   match results {
-    Some(Value::Text(v)) => value = v.to_string(),
+    Some(Value::Text(v)) => return Ok(v.to_string()),
     Some(Value::Symbol(v)) => {
-      value = match env.get(&v) {
-        Some(r) => r.to_string(),
+      match env.get(&v) {
+        Some(r) => return Ok(r.to_string()),
         None => {
           return Err(format!(
             "execute var : error during casting with unfound env key '{}'",
             v
           ))
         }
-      };
+      }
     }
     Some(Value::Vector(vector)) => {
       let mut iter = vector.into_iter().rev();
@@ -107,14 +106,14 @@ fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String>
           Err(err) => return Err(err),
         }
       }
-      value = tmp.join("\n");
+      return Ok(tmp.join("\n"));
     }
-    Some(Value::True) => value = "true".to_string(),
-    Some(Value::False) => (),
-    Some(Value::Void) => (),
-    None => (),
+    Some(Value::True) => return Ok("true".to_string()),
+    Some(Value::Number(n)) => return Ok(n.to_string()),
+    Some(Value::False) => return Ok("".to_string()),
+    Some(Value::Void) => return Ok("".to_string()),
+    None => return Ok("".to_string()),
   }
-  Ok(value)
 }
 
 pub fn resolve_unit<'a>(
@@ -191,10 +190,10 @@ pub fn resolve_unit<'a>(
   }
   let Context {
     begining: _,
-    result: result,
+    result,
     doc: _,
     doc_position: _,
-    env: env,
+    env,
     source: _,
     fct_name: _,
     args: _,
