@@ -1,5 +1,6 @@
 pub mod args;
 pub mod conf;
+pub mod error;
 // pub mod json;
 
 pub static APP_NAME: &'static str = "Moustache";

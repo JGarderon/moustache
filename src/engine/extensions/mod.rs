@@ -56,12 +56,11 @@ pub struct Helper {
 
 impl Helper {
   pub fn display(&self) {
-    println!("
+    println!(
+      "
   ♦ Extension '{}' - by {} 
-    {}", 
-      self.module_name,
-      self.module_autor,
-      self.module_description
+    {}",
+      self.module_name, self.module_autor, self.module_description
     );
     for f in self.functions.iter() {
       f.display();
@@ -80,10 +79,11 @@ struct HelperFunction {
 
 impl HelperFunction {
   fn display(&self) {
-    println!("
+    println!(
+      "
     ↪ function '{}' (pipe : {}) 
       description : {}
-      args : {}", 
+      args : {}",
       self.function_name,
       if self.function_can_pipe { "yes" } else { "no" },
       self.function_description,

@@ -98,8 +98,9 @@ fn main() {
           break;
         }
       }
-      Err(err) => {
-        println!("Error during resolving = {:?}", err);
+      Err(mut err) => {
+        err = add_step_internal_error!(err, "Error during resolving");
+        err.display(conf.error_formatting);
         std::process::exit(1);
       }
     }

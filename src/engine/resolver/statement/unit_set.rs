@@ -1,19 +1,26 @@
 use core::slice::Iter;
 use std::iter::Peekable;
 
+use crate::create_internal_error;
 use crate::engine::resolver::statement::Token;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 pub fn resolve_unit<'a>(
   env: &mut Environment,
   source: &'a str,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
-) -> Result<(), String> {
+) -> Result<(), InternalError> {
   let mut key: String;
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Err("set var : can't be empty".to_string()),
+      None => {
+        return Err(create_internal_error!(
+          "Statement can't be empty",
+          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+        ))
+      }
     };
     match token {
       Token::Space(_) => (),
@@ -22,25 +29,37 @@ pub fn resolve_unit<'a>(
         break;
       }
       t => {
-        return Err(format!(
-          "set var : found '{}' in first part (must be Token::Symbol)",
-          t
-        ))
+        return Err(create_internal_error!(
+          format!("Found '{}' in first part (must be Token::Symbol)", t),
+          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+        ));
       }
     }
   }
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Err("set var : can't be empty (token 'equal' not found)".to_string()),
+      None => {
+        return Err(create_internal_error!(
+          "Statement must be complete (token 'equal' not found, premature end)",
+          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+        ))
+      }
     };
     match token {
       Token::Space(_) => (),
       Token::Equal => break,
       t => {
-        return Err(format!(
-          "set var : found '{}' in first part (must be Token::Equal)",
-          t
+        return Err(create_internal_error!(
+          "Incorrect token after the first part (must be Token::Equal)",
+          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+          format!(
+            "found statement = '\x1b[3m{}\x1b[0m' (incorrect token : {})",
+            source.trim(),
+            t
+          )
         ))
       }
     }
@@ -53,11 +72,16 @@ pub fn resolve_unit<'a>(
       Some(t) => t,
       None => {
         if begining {
-          return Err("set var : can't be empty".to_string());
+          return Err(create_internal_error!(
+            "The second part cannot be empty",
+            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+          ));
         } else if operator == false {
-          return Err(
-            "set var : invalid ending (an operator without symbol or text after)".to_string(),
-          );
+          return Err(create_internal_error!(
+            "Invalid ending : an operator without symbol or text after",
+            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+            format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+          ));
         } else {
           break;
         }
@@ -67,15 +91,28 @@ pub fn resolve_unit<'a>(
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) => {
+        key = source[s..e].to_string();
         if operator == false {
-          key = source[s..e].to_string();
           match env.get(&key) {
             Some(v) => value.push(v.clone()),
-            None => return Err(format!("set var : var '{}' in value is undefined", key)),
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}'",
+                key
+              )))
+            }
           }
           operator = true;
         } else {
-          return Err("set var : operator missing".to_string());
+          return Err(create_internal_error!(
+            "Operator missing between symbol or text",
+            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+            format!(
+              "found statement = '\x1b[3m{}\x1b[0m' (symbol : {})",
+              source.trim(),
+              key
+            )
+          ));
         }
       }
       &Token::Text(s, e) => {
@@ -83,20 +120,32 @@ pub fn resolve_unit<'a>(
           value.push(source[s..e].to_string());
           operator = true;
         } else {
-          return Err("set var : operator missing".to_string());
+          return Err(create_internal_error!(
+            "Operator missing between symbol or text",
+            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+            format!(
+              "found statement = '\x1b[3m{}\x1b[0m' (text : {})",
+              source.trim(),
+              source[s..e].to_string()
+            )
+          ));
         }
       }
       &Token::Plus => {
         if operator == true {
           operator = false;
         } else {
-          return Err("set var : symbol or text missing before operator".to_string());
+          return Err(create_internal_error!(
+            "Symbol or text missing before operator",
+            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+          ));
         }
       }
       t => {
-        return Err(format!(
-          "set var : found '{}' in first part (must be Token::Symbol)",
-          t
+        return Err(create_internal_error!(
+          format!("Found '{}' in first part (must be Token::Symbol)", t),
+          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
+          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
         ))
       }
     }

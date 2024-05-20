@@ -24,6 +24,7 @@ pub fn parse() -> Result<Configuration, String> {
       "--version" => c.display_version(true),
       "--reentrant" | "-r" => c.is_reentrant(true),
       "--no-extensions" => c.no_extensions(true),
+      "--error-formatting" => c.error_formatting(true),
       "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
@@ -72,17 +73,21 @@ by {}
     APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
   );
   if resume {
-    println!("
+    println!(
+      "
   --help      | -h    display this message and exit (0)
   --debug     | -d    display the debug
-  --input     | -i    input of process (path ; else stdin)
-  --output    | -o    output of process (path)
-  --var       | -v    add var to env 
+
+  --input +   | -i +  input of process (path ; else stdin) - with arg
+  --output +  | -o +  output of process (path) - with arg
+  --var +     | -v +  add var to env - with arg 
   --reentrant | -r    document is reentrant 
+  --error-formatting  support of ANSI color and style codes 
 
   --help-extensions   display extensions documentation and exit (0)
   --no-extensions     disable extensions (with error)
-");
+"
+    );
   }
 }
 
@@ -92,27 +97,12 @@ pub fn display_version() {
 }
 
 pub fn display_helping_extensions() {
-  display_helping(false); 
-  print!("
+  display_helping(false);
+  print!(
+    "
 Extensions documentation
 ------------------------
 "
   );
   default::help().display();
 }
-// #[derive(Debug)]
-// pub struct Helper {
-//   module_name: &'static str,
-//   module_description: &'static str,
-//   module_autor: &'static str,
-//   module_version: &'static str,
-//   functions: Vec<HelperFunction>,
-// }
-
-// #[derive(Debug)]
-// struct HelperFunction {
-//   function_name: &'static str,
-//   function_description: &'static str,
-//   function_can_pipe: bool,
-//   function_args: &'static str,
-// }

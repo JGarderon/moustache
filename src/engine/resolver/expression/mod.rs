@@ -1,14 +1,16 @@
+use crate::create_internal_error;
 use crate::engine::document::Part;
 use crate::engine::parser;
 use crate::engine::resolver::add_string_to_another;
 use crate::engine::Document;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 pub fn resolve_expression<'a>(
   _doc: &'a Document,
   expr: &'a str,
   env: &mut Environment,
-) -> Result<Part, String> {
+) -> Result<Part, InternalError> {
   let source: &str = &expr[2..expr.len() - 2];
   let tokens: Vec<parser::Token> = match parser::parse(source) {
     Ok(t) => t,
@@ -24,19 +26,21 @@ pub fn resolve_expression<'a>(
     };
     match token {
       parser::Token::Text(_, _) if is_begining == false => {
-        return Err(format!("invalid position's text in expression"))
+        return Err(create_internal_error!(format!(
+          "invalid position's text in expression"
+        )))
       }
       parser::Token::Symbol(s, e) if is_begining == false => {
-        return Err(format!(
+        return Err(create_internal_error!(format!(
           "invalid position's symbol in expression {}:{}",
           s, e
-        ))
+        )))
       }
       parser::Token::Plus if is_begining => {
-        return Err(format!(
+        return Err(create_internal_error!(format!(
           "token {} not authorized in expression begining",
           token
-        ))
+        )))
       }
 
       parser::Token::Text(s, e) if is_begining => {
@@ -47,7 +51,12 @@ pub fn resolve_expression<'a>(
         let symbol = source[*s..*e].to_string();
         match env.get(&symbol) {
           Some(v) => output.push_str(v),
-          None => return Err(format!("key '{}' not found in env (expr)", symbol)),
+          None => {
+            return Err(create_internal_error!(format!(
+              "key '{}' not found in env (expr)",
+              symbol
+            )))
+          }
         }
         is_begining = false;
       }
@@ -66,28 +75,38 @@ pub fn resolve_expression<'a>(
                   &mut v[..].to_string(), // pas terrible...
                   &mut output,
                 ),
-                None => return Err(format!("key '{}' not found in env ('plus' expr)", symbol)),
+                None => {
+                  return Err(create_internal_error!(format!(
+                    "key '{}' not found in env ('plus' expr)",
+                    symbol
+                  )))
+                }
               }
               is_begining = false;
               break;
             }
             Some(parser::Token::Space(_)) => continue,
             Some(t) => {
-              return Err(format!(
+              return Err(create_internal_error!(format!(
                 "token {} not authorized in second part of 'plus' expression",
                 t
-              ))
+              )))
             }
             None => {
-              return Err(format!(
+              return Err(create_internal_error!(format!(
                 "no token found for second part in 'plus' expression"
-              ))
+              )))
             }
           };
         }
       }
       parser::Token::Space(_) => (),
-      t => return Err(format!("token {} not authorized in expression", t)),
+      t => {
+        return Err(create_internal_error!(format!(
+          "token {} not authorized in expression",
+          t
+        )))
+      }
     }
   }
   Ok(Part::GeneratedText(output))

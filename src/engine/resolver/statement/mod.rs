@@ -5,11 +5,14 @@ pub mod unit_if;
 pub mod unit_include;
 pub mod unit_set;
 
+use crate::add_step_internal_error;
+use crate::create_internal_error;
 use crate::engine::document::Document;
 use crate::engine::document::Part;
 use crate::engine::environment::Environment;
 use crate::engine::parser;
 use crate::engine::parser::Token;
+use crate::utils::error::InternalError;
 
 use crate::engine::resolver::statement::unit_block::resolve_unit as resolve_statement_block;
 use crate::engine::resolver::statement::unit_call::resolve_unit as resolve_statement_call;
@@ -29,7 +32,7 @@ pub fn resolve_statement<'a>(
   doc_position: usize,
   expr: &'a str,
   env: &mut Environment,
-) -> Result<(Vec<Part>, usize), String> {
+) -> Result<(Vec<Part>, usize), InternalError> {
   let source: &str = &expr[2..expr.len() - 2];
   let tokens: Vec<parser::Token> = match parser::parse(source) {
     Ok(t) => t,
@@ -50,7 +53,12 @@ pub fn resolve_statement<'a>(
             position_skip = p;
             break;
           }
-          Err(err) => return Err(format!("error in declaring 'block' statement : {}", err)),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'define block' statement"
+            ))
+          }
         },
         "call" => match resolve_statement_call(env, source, &mut iter) {
           Ok(v) => {
@@ -59,14 +67,24 @@ pub fn resolve_statement<'a>(
             }
             break;
           }
-          Err(err) => return Err(format!("error in 'call' block statement : {}", err)),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'call block' statement"
+            ))
+          }
         },
         "include" => match resolve_statement_include(env, source, &mut iter) {
           Ok(v) => {
             output.push(v);
             break;
           }
-          Err(err) => return Err(format!("error in 'include' statement : {}", err)),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'include' statement"
+            ))
+          }
         },
         "if" => match resolve_statement_if(doc, doc_position, env, source, &mut iter) {
           Ok((v, p)) => {
@@ -74,20 +92,35 @@ pub fn resolve_statement<'a>(
             position_skip = p;
             break;
           }
-          Err(err) => return Err(format!("error in 'if' statement : {}", err)),
+          Err(mut err) => return Err(add_step_internal_error!(err, "error in 'if' statement")),
         },
         "set" => match resolve_statement_set(env, source, &mut iter) {
           Ok(_) => break,
-          Err(err) => return Err(format!("error in 'set' statement : {}", err)),
+          Err(mut err) => return Err(add_step_internal_error!(err, "error in 'set' statement")),
         },
         "execute" => match resolve_statement_execute(doc, doc_position, env, source, &mut iter) {
           Ok(_) => break,
-          Err(err) => return Err(format!("error in 'execute' statement : {}", err)),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'execute' statement"
+            ))
+          }
         },
-        s => return Err(format!("invalid action '{}' in statement", s)),
+        s => {
+          return Err(create_internal_error!(format!(
+            "invalid action '{}' in statement",
+            s
+          )))
+        }
       },
       parser::Token::Space(_) => (),
-      t => return Err(format!("token {} not authorized in statement", t)),
+      t => {
+        return Err(create_internal_error!(format!(
+          "token {} not authorized in statement",
+          t
+        )))
+      }
     }
   }
   Ok((output, position_skip))

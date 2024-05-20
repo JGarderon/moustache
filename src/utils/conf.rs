@@ -11,6 +11,7 @@ pub struct Configuration {
   pub is_reentrant: bool,
   pub display_version: bool,
   pub no_extensions: bool,
+  pub error_formatting: bool,
 }
 
 impl Configuration {
@@ -25,6 +26,7 @@ impl Configuration {
       is_reentrant: false,
       display_version: false,
       no_extensions: false,
+      error_formatting: false,
     }
   }
   pub fn is_helping(&mut self, v: bool) {
@@ -44,5 +46,8 @@ impl Configuration {
   }
   pub fn no_extensions(&mut self, v: bool) {
     self.no_extensions = v;
+  }
+  pub fn error_formatting(&mut self, v: bool) {
+    self.error_formatting = v;
   }
 }

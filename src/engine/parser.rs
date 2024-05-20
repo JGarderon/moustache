@@ -1,3 +1,5 @@
+use crate::create_internal_error;
+use crate::utils::error::InternalError;
 use std::cmp::PartialEq;
 use std::fmt;
 
@@ -92,7 +94,7 @@ pub enum TokenSpace {
   CarriageReturn,
 }
 
-pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
+pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, InternalError> {
   let mut stack: Vec<Token> = vec![];
   let mut is_text: bool = false;
   let mut portion_start: usize = 0;
@@ -106,7 +108,7 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
       is_escaping = false;
       continue;
     } else if is_text == false && is_escaping == true {
-      return Err(format!("bad escape at {}", i - 1));
+      return Err(create_internal_error!(format!("bad escape at {}", i - 1)));
     }
     match c {
       ' ' | '\t' | '\n' | '\r' if is_text == false => {
@@ -221,10 +223,10 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, String> {
     }
   }
   if is_text {
-    return Err(format!(
+    return Err(create_internal_error!(format!(
       "text opened at position {} and not closed",
       portion_start
-    ));
+    )));
   }
   let max: usize = source.len();
   if portion_start < max {

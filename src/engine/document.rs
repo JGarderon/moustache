@@ -1,8 +1,10 @@
 use std::fs;
 
+use crate::create_internal_error;
 use crate::engine::environment;
 use crate::engine::resolver;
 use crate::utils::conf::Configuration;
+use crate::utils::error::InternalError;
 
 #[derive(Debug)]
 pub struct Document<'c> {
@@ -33,7 +35,7 @@ impl<'c> Document<'c> {
   pub fn stack_get(&self, position: usize) -> Option<&Part> {
     self.stack.get(position)
   }
-  pub fn parse_parts(&mut self) -> Result<bool, String> {
+  pub fn parse_parts(&mut self) -> Result<bool, InternalError> {
     let iter = self.source.char_indices().collect::<Vec<(usize, char)>>();
     if iter.len() == 0 {
       return Ok(false);
@@ -53,10 +55,10 @@ impl<'c> Document<'c> {
                 }
               }
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : start another part 'Expression' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::Expression(i, 0);
@@ -65,10 +67,10 @@ impl<'c> Document<'c> {
             match part_type {
               Part::Expression(y, _) => self.stack.push(Part::Expression(y, i + 2)),
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : end another part 'Expression' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::StaticText(i + 2, 0);
@@ -81,10 +83,10 @@ impl<'c> Document<'c> {
                 }
               }
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : start another part 'Statement' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::Statement(i, 0);
@@ -93,10 +95,10 @@ impl<'c> Document<'c> {
             match part_type {
               Part::Statement(y, _) => self.stack.push(Part::Statement(y, i + 2)),
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : end another part 'Statement' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::StaticText(i + 2, 0);
@@ -109,10 +111,10 @@ impl<'c> Document<'c> {
                 }
               }
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : start another part 'Comment' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::Comment(i, 0);
@@ -121,10 +123,10 @@ impl<'c> Document<'c> {
             match part_type {
               Part::Comment(y, _) => self.stack.push(Part::Comment(y, i + 2)),
               p => {
-                return Err(format!(
+                return Err(create_internal_error!(format!(
                   "not authorized : end another part 'Comment' in {:?} part",
                   p
-                ))
+                )));
               }
             }
             part_type = Part::StaticText(i + 2, 0);
@@ -140,9 +142,24 @@ impl<'c> Document<'c> {
           self.stack.push(Part::StaticText(s, l));
         }
       }
-      Part::Statement(s, _) => return Err(format!("no ending for expression (start at {:?})", s)),
-      Part::Expression(s, _) => return Err(format!("no ending for expression (start at {:?})", s)),
-      Part::Comment(s, _) => return Err(format!("no ending for comment (start at {:?})", s)),
+      Part::Statement(s, _) => {
+        return Err(create_internal_error!(format!(
+          "no ending for expression (start at {:?})",
+          s
+        )))
+      }
+      Part::Expression(s, _) => {
+        return Err(create_internal_error!(format!(
+          "no ending for expression (start at {:?})",
+          s
+        )))
+      }
+      Part::Comment(s, _) => {
+        return Err(create_internal_error!(format!(
+          "no ending for comment (start at {:?})",
+          s
+        )))
+      }
       _ => (),
     }
     Ok(true)
@@ -180,10 +197,10 @@ impl<'c> Document<'c> {
         Part::Comment(_, _) => (),
       }
     }
-    self.stack = vec!();
+    self.stack = vec![];
     self.source = destination;
   }
-  pub fn resolve(&mut self, env: &mut environment::Environment) -> Result<bool, String> {
+  pub fn resolve(&mut self, env: &mut environment::Environment) -> Result<bool, InternalError> {
     match resolver::resolve(self, env) {
       Ok(r) => {
         if r.changed {

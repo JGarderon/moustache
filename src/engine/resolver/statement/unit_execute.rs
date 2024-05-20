@@ -1,12 +1,14 @@
 use core::slice::Iter;
 use std::iter::Peekable;
 
+use crate::create_internal_error;
 use crate::engine::extensions::default;
 use crate::engine::extensions::Context;
 use crate::engine::extensions::Value;
 use crate::engine::resolver::statement::Token;
 use crate::engine::Document;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 fn resolve_fct<'a>(
   context: &mut Context,
@@ -86,17 +88,15 @@ fn resolve_fct<'a>(
 fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String> {
   match results {
     Some(Value::Text(v)) => return Ok(v.to_string()),
-    Some(Value::Symbol(v)) => {
-      match env.get(&v) {
-        Some(r) => return Ok(r.to_string()),
-        None => {
-          return Err(format!(
-            "execute var : error during casting with unfound env key '{}'",
-            v
-          ))
-        }
+    Some(Value::Symbol(v)) => match env.get(&v) {
+      Some(r) => return Ok(r.to_string()),
+      None => {
+        return Err(format!(
+          "execute var : error during casting with unfound env key '{}'",
+          v
+        ))
       }
-    }
+    },
     Some(Value::Vector(vector)) => {
       let mut iter = vector.into_iter().rev();
       let mut tmp: Vec<String> = vec![];
@@ -122,15 +122,21 @@ pub fn resolve_unit<'a>(
   env: &mut Environment,
   source: &'a str,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
-) -> Result<(), String> {
+) -> Result<(), InternalError> {
   if doc.conf.no_extensions {
-    return Err("execute statement found : not authorized by conf".to_string());
+    return Err(create_internal_error!(
+      "execute statement found : not authorized by conf".to_string()
+    ));
   }
   let key: String;
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Err("execute var : can't be empty".to_string()),
+      None => {
+        return Err(create_internal_error!(
+          "execute var : can't be empty".to_string()
+        ))
+      }
     };
     match token {
       Token::Space(_) => (),
@@ -139,26 +145,30 @@ pub fn resolve_unit<'a>(
         break;
       }
       t => {
-        return Err(format!(
+        return Err(create_internal_error!(format!(
           "execute var : found '{}' in first part (must be Token::Symbol)",
           t
-        ))
+        )));
       }
     }
   }
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Err("execute var : can't be empty (token 'equal' not found)".to_string()),
+      None => {
+        return Err(create_internal_error!(
+          "execute var : can't be empty (token 'equal' not found)"
+        ))
+      }
     };
     match token {
       Token::Space(_) => (),
       Token::Equal => break,
       t => {
-        return Err(format!(
+        return Err(create_internal_error!(format!(
           "execute var : found '{}' in first part (must be Token::Equal)",
           t
-        ))
+        )));
       }
     }
   }
@@ -166,10 +176,10 @@ pub fn resolve_unit<'a>(
   'outer: loop {
     match resolve_fct(&mut context, iter_tokens) {
       Some(err) => {
-        return Err(format!(
+        return Err(create_internal_error!(format!(
           "execute statement : error during execution : '{}'",
           err
-        ))
+        )));
       }
       None => (),
     }
@@ -183,10 +193,10 @@ pub fn resolve_unit<'a>(
         Token::Space(_) => (),
         Token::Pipe => break 'inner,
         t => {
-          return Err(format!(
+          return Err(create_internal_error!(format!(
             "execute var : found '{}' in first part (must be Token::Pipe)",
             t
-          ))
+          )));
         }
       }
     }
@@ -203,7 +213,12 @@ pub fn resolve_unit<'a>(
   } = context;
   let value = match cast(env, result) {
     Ok(value) => value,
-    Err(err) => return Err(format!("execute var : error during casting : '{}'", err)),
+    Err(err) => {
+      return Err(create_internal_error!(format!(
+        "execute var : error during casting : '{}'",
+        err
+      )))
+    }
   };
   env.set(key, value);
   Ok(())

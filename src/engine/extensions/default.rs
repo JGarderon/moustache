@@ -10,7 +10,7 @@ fn recursive_uppercase(value: Value) -> Value {
     Value::Symbol(v) => Value::Symbol(v.to_uppercase()),
     Value::Text(v) => Value::Text(v.to_uppercase()),
     Value::Vector(vector) => Value::Vector(vector.into_iter().map(recursive_uppercase).collect()),
-    v => v
+    v => v,
   }
 }
 
@@ -46,7 +46,7 @@ fn recursive_lowercase(value: Value) -> Value {
     Value::Symbol(v) => Value::Symbol(v.to_lowercase()),
     Value::Text(v) => Value::Text(v.to_lowercase()),
     Value::Vector(vector) => Value::Vector(vector.into_iter().map(recursive_lowercase).collect()),
-    v => v
+    v => v,
   }
 }
 
@@ -105,7 +105,7 @@ pub fn help() -> Helper {
         function_description: "lowercase for string",
         function_can_pipe: true,
         function_args: "as much as desired (priority to pipe)",
-      }
+      },
     ],
   }
 }

@@ -7,13 +7,14 @@ use crate::engine::resolver::statement::resolve_statement;
 use crate::engine::resolver::statement::Resolved;
 use crate::engine::Document;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 pub fn add_string_to_another(s1: &mut String, s2: &mut String) {
   s1.retain(|c| !r#"\"#.contains(c));
   s2.push_str(s1);
 }
 
-pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved, String> {
+pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved, InternalError> {
   let mut position: usize = 0;
   let max: usize = doc.stack_len();
   let mut result: Vec<Part> = vec![];
