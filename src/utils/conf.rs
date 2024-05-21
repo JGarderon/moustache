@@ -29,6 +29,38 @@ impl Configuration {
       error_formatting: false,
     }
   }
+  pub fn display(&self) -> String {
+    format!(
+      r#"Configuration:
+input:                 {:?}
+output:                {:?}
+variables:             {}
+
+is_helping:            '{}'
+is_helping_extensions: '{}'
+is_debugging:          '{}'
+is_reentrant:          '{}'
+display_version:       '{}'
+no_extensions:         '{}'
+error_formatting:      '{}'"#,
+      self.input,
+      self.output,
+      {
+        let mut s: Vec<String> = vec!["".to_string()];
+        for (key, val) in self.variables.iter() {
+          s.push(format!("      - {} -> {}", key, val))
+        }
+        s.join("\n")
+      },
+      self.is_helping,
+      self.is_helping_extensions,
+      self.is_debugging,
+      self.is_reentrant,
+      self.display_version,
+      self.no_extensions,
+      self.error_formatting,
+    )
+  }
   pub fn is_helping(&mut self, v: bool) {
     self.is_helping = v;
   }

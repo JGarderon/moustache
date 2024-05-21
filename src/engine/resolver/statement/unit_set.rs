@@ -32,7 +32,10 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           format!("Found '{}' in first part (must be Token::Symbol)", t),
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!(
+            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
+            source.trim()
+          )
         ));
       }
     }
@@ -44,7 +47,10 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           "Statement must be complete (token 'equal' not found, premature end)",
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!(
+            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
+            source.trim()
+          )
         ))
       }
     };
@@ -68,25 +74,26 @@ pub fn resolve_unit<'a>(
   let mut begining: bool = true;
   let mut operator: bool = false;
   loop {
-    let token = match iter_tokens.next() {
-      Some(t) => t,
-      None => {
-        if begining {
-          return Err(create_internal_error!(
+    let token =
+      match iter_tokens.next() {
+        Some(t) => t,
+        None => {
+          if begining {
+            return Err(create_internal_error!(
             "The second part cannot be empty",
             "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
           ));
-        } else if operator == false {
-          return Err(create_internal_error!(
+          } else if operator == false {
+            return Err(create_internal_error!(
             "Invalid ending : an operator without symbol or text after",
             "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
             format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
           ));
-        } else {
-          break;
+          } else {
+            break;
+          }
         }
-      }
-    };
+      };
     begining = false;
     match token {
       Token::Space(_) => (),
@@ -149,7 +156,10 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           format!("Found '{}' in first part (must be Token::Symbol)", t),
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!(
+            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
+            source.trim()
+          )
         ))
       }
     }

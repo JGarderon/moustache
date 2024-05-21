@@ -18,17 +18,15 @@ pub fn resolve_unit<'a>(
       Some(token) => match token {
         Token::Space(_) => (),
         &Token::Symbol(s, e) => {
-          let key = source[s..e].to_string(); 
+          let key = source[s..e].to_string();
           block_name = match env.get(&key) {
             Some(v) => v.clone(),
-            None => return Err(
-              create_internal_error!(
-                format!(
-                  "Undefined variable '{}' while retrieving the block name",
-                  key
-                )
-              )
-            )
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}' while retrieving the block name",
+                key
+              )))
+            }
           };
           break;
         }
@@ -37,14 +35,10 @@ pub fn resolve_unit<'a>(
           break;
         }
         t => {
-          return Err(
-            create_internal_error!(
-              format!(
-                "Token '{}' not authorized in declarative block statement (must be Token::Text)",
-                t
-              )
-            )
-          );
+          return Err(create_internal_error!(format!(
+            "Token '{}' not authorized in declarative block statement (must be Token::Text)",
+            t
+          )));
         }
       },
       None => return Err(create_internal_error!("Empty declaration block")),
@@ -52,13 +46,9 @@ pub fn resolve_unit<'a>(
   }
   match env.get_block(&block_name) {
     Some(v) => Ok(v.clone()),
-    None => Err(
-      create_internal_error!(
-        format!(
-          "Undefined block '{}' in environment", 
-          block_name
-        )
-      )
-    ),
+    None => Err(create_internal_error!(format!(
+      "Undefined block '{}' in environment",
+      block_name
+    ))),
   }
 }

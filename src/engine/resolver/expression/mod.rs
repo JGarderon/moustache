@@ -29,12 +29,11 @@ pub fn resolve_expression<'a>(
         return Err(
           create_internal_error!(
             format!(
-              "Invalid position's text in expression, the operator '+' is likely missing (found '{}' at {} ~> {})",
+              "Invalid position's text in expression: the operator '+' is likely missing (found '{}' at {} ~> {})",
               &source[s..e],
               s,
               e
-            ),
-            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+            )
           )
         )
       }
@@ -42,12 +41,11 @@ pub fn resolve_expression<'a>(
         return Err(
           create_internal_error!(
             format!(
-              "Invalid position's symbol in expression, the operator '+' is likely missing (found '{}' at {} ~> {})",
+              "Invalid position's symbol in expression: the operator '+' is likely missing (found '{}' at {} ~> {})",
               &source[s..e],
               s,
               e
-            ),
-            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+            )
           )
         )
       }

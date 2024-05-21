@@ -22,7 +22,7 @@ pub fn resolve_unit<'a>(
       Some(token) => match token {
         Token::Space(_) => (),
         &Token::Symbol(s, e) => {
-          let key = source[s..e].to_string(); 
+          let key = source[s..e].to_string();
           block_name = match env.get(&key) {
             Some(v) => v.clone(),
             None => return Err(

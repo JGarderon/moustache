@@ -29,8 +29,16 @@ impl<'c> Document<'c> {
       stack: vec![],
     }
   }
-  pub fn stack_len(&self) -> usize {
-    self.stack.len()
+  pub fn stack_len(&self) -> (usize, usize) {
+    let mut i: usize = 0;
+    let mut y: usize = 0;
+    for item in self.stack.iter() {
+      match item {
+        Part::StaticText(_, _) => y += 1,
+        _ => i += 1,
+      }
+    }
+    (i + y, y)
   }
   pub fn stack_get(&self, position: usize) -> Option<&Part> {
     self.stack.get(position)
@@ -163,28 +171,6 @@ impl<'c> Document<'c> {
       _ => (),
     }
     Ok(true)
-  }
-  pub fn debug_stack(&self) -> String {
-    let mut string = "\n---\n[DEBUG STACK]".to_string();
-    for p in &self.stack {
-      match p {
-        &Part::StaticText(s, e) => {
-          string.push_str(&format!("\n>> static text...\n--{}--", &self.source[s..e])[..])
-        }
-        Part::GeneratedText(s) => string.push_str(&format!("\n>> generated text... \n{}", s)[..]),
-        &Part::Statement(s, e) => {
-          string.push_str(&format!("\n>> statement... \n--{}--", &self.source[s..e])[..])
-        }
-        &Part::Expression(s, e) => {
-          string.push_str(&format!("\n>> expression... \n--{}--", &self.source[s..e])[..])
-        }
-        &Part::Comment(s, e) => {
-          string.push_str(&format!("\n>> comment text... \n--{}--", &self.source[s..e])[..])
-        }
-      }
-    }
-    string.push_str("\n---\n");
-    return string;
   }
   pub fn transform(&mut self) {
     let mut destination: String = "".to_string();

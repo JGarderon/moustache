@@ -36,14 +36,3 @@ impl Environment {
     self.blocks.get(key)
   }
 }
-
-// #[derive(Debug)]
-// pub enum Value {
-//   Bool(bool),
-//   Number(f64),
-//   Text(String),
-//   Array(Vec<Value>),
-//   Dict(HashMap<String,Value>),
-//   Null,
-//   None
-// }
