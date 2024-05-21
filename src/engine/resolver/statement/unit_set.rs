@@ -32,7 +32,7 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           format!("Found '{}' in first part (must be Token::Symbol)", t),
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
         ));
       }
     }
@@ -44,7 +44,7 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           "Statement must be complete (token 'equal' not found, premature end)",
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
         ))
       }
     };
@@ -56,7 +56,7 @@ pub fn resolve_unit<'a>(
           "Incorrect token after the first part (must be Token::Equal)",
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
           format!(
-            "found statement = '\x1b[3m{}\x1b[0m' (incorrect token : {})",
+            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (incorrect token : {})",
             source.trim(),
             t
           )
@@ -80,7 +80,7 @@ pub fn resolve_unit<'a>(
           return Err(create_internal_error!(
             "Invalid ending : an operator without symbol or text after",
             "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-            format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
           ));
         } else {
           break;
@@ -97,8 +97,8 @@ pub fn resolve_unit<'a>(
             Some(v) => value.push(v.clone()),
             None => {
               return Err(create_internal_error!(format!(
-                "Undefined variable '{}'",
-                key
+                "Undefined variable '{}' (position {} ~> {})",
+                key, s, e
               )))
             }
           }
@@ -108,9 +108,11 @@ pub fn resolve_unit<'a>(
             "Operator missing between symbol or text",
             "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
             format!(
-              "found statement = '\x1b[3m{}\x1b[0m' (symbol : {})",
+              "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (error on symbol : '{}' - position {} ~> {})",
               source.trim(),
-              key
+              key,
+              s,
+              e
             )
           ));
         }
@@ -124,9 +126,11 @@ pub fn resolve_unit<'a>(
             "Operator missing between symbol or text",
             "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
             format!(
-              "found statement = '\x1b[3m{}\x1b[0m' (text : {})",
+              "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (error on text : '{}' - position {} ~> {})",
               source.trim(),
-              source[s..e].to_string()
+              source[s..e].to_string(),
+              s,
+              e
             )
           ));
         }
@@ -145,7 +149,7 @@ pub fn resolve_unit<'a>(
         return Err(create_internal_error!(
           format!("Found '{}' in first part (must be Token::Symbol)", t),
           "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
         ))
       }
     }

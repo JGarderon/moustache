@@ -3,6 +3,7 @@ pub mod default;
 use crate::engine::Document;
 use crate::engine::Environment;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum Value {
   Text(String),

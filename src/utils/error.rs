@@ -32,15 +32,15 @@ impl InternalError {
     });
   }
   pub fn display(&mut self, error_formatting: bool) {
-    print!("\n-- ");
+    eprint!("\n-- ");
     if error_formatting {
-      print!("\x1b[5m\x1b[1m\x1b[31m");
+      eprint!("\x1b[5m\x1b[1m\x1b[31m");
     }
-    print!("ERROR FOUND");
+    eprint!("ERROR FOUND");
     if error_formatting {
-      print!("\x1b[0m");
+      eprint!("\x1b[0m");
     }
-    println!("\n");
+    eprintln!("\n");
     let mut deep = 0;
     while let Some(InternalErrorStep {
       message,
@@ -49,45 +49,51 @@ impl InternalError {
       mut infos,
     }) = self.stack.pop()
     {
-      print!("[{}] >> ", deep);
+      eprint!("[{}] >> ", deep);
       if error_formatting {
-        print!("\x1b[93m");
+        eprint!("\x1b[93m");
       }
-      print!("{}", message);
+      eprint!("{}", message);
       if error_formatting {
-        print!("\x1b[0m");
+        eprint!("\x1b[0m");
       }
-      print!("\n       ");
+      eprint!("\n       ");
       if error_formatting {
-        print!("\x1b[38;5;244m(");
+        eprint!("\x1b[38;5;244m(");
       }
-      print!("{}/{}#{})", APP_VERSION, file, line);
+      eprint!("{}/{}#{})", APP_VERSION, file, line);
       if error_formatting {
-        print!("\x1b[0m");
+        eprint!("\x1b[0m");
       }
-      println!();
+      eprintln!();
       if infos.len() > 0 {
         while let Some(line) = infos.pop() {
-          print!("       ");
+          eprint!("       ");
           if error_formatting {
-            print!("\x1b[38;5;253m");
+            eprint!("\x1b[38;5;253m");
           }
-          print!("{}", line);
+          eprint!("{}", line);
           if error_formatting {
-            print!("\x1b[0m");
+            eprint!("\x1b[0m");
           }
-          println!();
+          eprintln!();
         }
       }
-      println!();
+      eprintln!();
       deep += 1;
     }
-    println!("--\n");
+    eprintln!("--\n");
   }
 }
 
 #[macro_export]
 macro_rules! add_step_internal_error {
+    ($instance:expr, $content:expr) => {
+        {
+          $instance.add_step($content, (file!()).to_string(), line!(), vec!());
+          $instance
+        }
+    };
     ($instance:expr, $content:expr $(, $content_sup:expr)*) => {
         {
           let mut infos: Vec<String> = vec!();
@@ -102,6 +108,13 @@ macro_rules! add_step_internal_error {
 
 #[macro_export]
 macro_rules! create_internal_error {
+    ($content:expr) => {
+        {
+          let mut e: InternalError = InternalError::new();
+          e.add_step($content, (file!()).to_string(), line!(), vec!());
+          e
+        }
+    };
     ($content:expr $(, $content_sup:expr)*) => {
         {
           let mut e: InternalError = InternalError::new();

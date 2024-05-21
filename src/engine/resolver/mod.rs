@@ -1,6 +1,7 @@
 pub mod expression;
 pub mod statement;
 
+use crate::add_step_internal_error;
 use crate::engine::document::Part;
 use crate::engine::resolver::expression::resolve_expression;
 use crate::engine::resolver::statement::resolve_statement;
@@ -28,7 +29,13 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
       Some(&Part::Expression(s, e)) => {
         match resolve_expression(doc, &doc.source[s..e], env) {
           Ok(p) => result.push(p),
-          Err(err) => return Err(err),
+          Err(mut err) => return Err(
+            add_step_internal_error!(
+              err,
+              "Error in expression",
+              format!("target expression (here with trim !) = '\x1b[3m{}\x1b[0m'", &doc.source[s+2..e-2].trim())
+            )
+          ),
         }
         changed = true;
       }

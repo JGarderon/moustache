@@ -25,24 +25,39 @@ pub fn resolve_expression<'a>(
       None => break,
     };
     match token {
-      parser::Token::Text(_, _) if is_begining == false => {
-        return Err(create_internal_error!(format!(
-          "invalid position's text in expression"
-        )))
+      &parser::Token::Text(s, e) if is_begining == false => {
+        return Err(
+          create_internal_error!(
+            format!(
+              "Invalid position's text in expression, the operator '+' is likely missing (found '{}' at {} ~> {})",
+              &source[s..e],
+              s,
+              e
+            ),
+            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+          )
+        )
       }
-      parser::Token::Symbol(s, e) if is_begining == false => {
-        return Err(create_internal_error!(format!(
-          "invalid position's symbol in expression {}:{}",
-          s, e
-        )))
+      &parser::Token::Symbol(s, e) if is_begining == false => {
+        return Err(
+          create_internal_error!(
+            format!(
+              "Invalid position's symbol in expression, the operator '+' is likely missing (found '{}' at {} ~> {})",
+              &source[s..e],
+              s,
+              e
+            ),
+            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+          )
+        )
       }
       parser::Token::Plus if is_begining => {
-        return Err(create_internal_error!(format!(
-          "token {} not authorized in expression begining",
-          token
-        )))
+        return Err(
+          create_internal_error!(
+            "The operator '+' is not allowed at the beginning of the expression or more than once in a row"
+          )
+        )
       }
-
       parser::Token::Text(s, e) if is_begining => {
         add_string_to_another(&mut source[*s..*e].to_string(), &mut output);
         is_begining = false;
@@ -53,7 +68,7 @@ pub fn resolve_expression<'a>(
           Some(v) => output.push_str(v),
           None => {
             return Err(create_internal_error!(format!(
-              "key '{}' not found in env (expr)",
+              "Undefined variable '{}' in environment",
               symbol
             )))
           }
@@ -77,7 +92,7 @@ pub fn resolve_expression<'a>(
                 ),
                 None => {
                   return Err(create_internal_error!(format!(
-                    "key '{}' not found in env ('plus' expr)",
+                    "Undefined variable '{}' in environment",
                     symbol
                   )))
                 }
@@ -88,14 +103,14 @@ pub fn resolve_expression<'a>(
             Some(parser::Token::Space(_)) => continue,
             Some(t) => {
               return Err(create_internal_error!(format!(
-                "token {} not authorized in second part of 'plus' expression",
+                "Token {} not authorized in second part of expression (after '+'; must be text or symbol)",
                 t
               )))
             }
             None => {
-              return Err(create_internal_error!(format!(
-                "no token found for second part in 'plus' expression"
-              )))
+              return Err(create_internal_error!(
+                "No token found for second part of expression (after '+')"
+              ))
             }
           };
         }
@@ -103,7 +118,7 @@ pub fn resolve_expression<'a>(
       parser::Token::Space(_) => (),
       t => {
         return Err(create_internal_error!(format!(
-          "token {} not authorized in expression",
+          "Token {} not authorized in second part of expression (at beginning; must be text or symbol)",
           t
         )))
       }

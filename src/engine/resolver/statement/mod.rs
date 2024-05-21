@@ -56,7 +56,8 @@ pub fn resolve_statement<'a>(
           Err(mut err) => {
             return Err(add_step_internal_error!(
               err,
-              "error in 'define block' statement"
+              "error in 'define block' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
             ))
           }
         },
@@ -70,7 +71,8 @@ pub fn resolve_statement<'a>(
           Err(mut err) => {
             return Err(add_step_internal_error!(
               err,
-              "error in 'call block' statement"
+              "error in 'call block' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
             ))
           }
         },
@@ -82,7 +84,8 @@ pub fn resolve_statement<'a>(
           Err(mut err) => {
             return Err(add_step_internal_error!(
               err,
-              "error in 'include' statement"
+              "error in 'include' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
             ))
           }
         },
@@ -92,34 +95,47 @@ pub fn resolve_statement<'a>(
             position_skip = p;
             break;
           }
-          Err(mut err) => return Err(add_step_internal_error!(err, "error in 'if' statement")),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'if' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+            ))
+          }
         },
         "set" => match resolve_statement_set(env, source, &mut iter) {
           Ok(_) => break,
-          Err(mut err) => return Err(add_step_internal_error!(err, "error in 'set' statement")),
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'set' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+            ))
+          }
         },
         "execute" => match resolve_statement_execute(doc, doc_position, env, source, &mut iter) {
           Ok(_) => break,
           Err(mut err) => {
             return Err(add_step_internal_error!(
               err,
-              "error in 'execute' statement"
+              "error in 'execute' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
             ))
           }
         },
         s => {
-          return Err(create_internal_error!(format!(
-            "invalid action '{}' in statement",
-            s
-          )))
+          return Err(create_internal_error!(
+            format!("invalid action '{}' in statement", s),
+            format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+          ))
         }
       },
       parser::Token::Space(_) => (),
       t => {
-        return Err(create_internal_error!(format!(
-          "token {} not authorized in statement",
-          t
-        )))
+        return Err(create_internal_error!(
+          format!("token {} not authorized in statement", t),
+          format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+        ))
       }
     }
   }

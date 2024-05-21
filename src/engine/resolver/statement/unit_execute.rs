@@ -1,6 +1,7 @@
 use core::slice::Iter;
 use std::iter::Peekable;
 
+use crate::add_step_internal_error;
 use crate::create_internal_error;
 use crate::engine::extensions::default;
 use crate::engine::extensions::Context;
@@ -18,7 +19,7 @@ fn resolve_fct<'a>(
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Some("execute var : can't be empty".to_string()),
+      None => return Some("The call expression cannot be empty".to_string()),
     };
     match token {
       Token::Space(_) => (),
@@ -28,7 +29,7 @@ fn resolve_fct<'a>(
       }
       t => {
         return Some(format!(
-          "execute var : found '{}' in first part (must be Token::Symbol)",
+          "Found '{}' for name function (must be Token::Symbol)",
           t
         ))
       }
@@ -37,14 +38,14 @@ fn resolve_fct<'a>(
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Some("execute var : can't be empty".to_string()),
+      None => return Some("The call expression must have parenthesized arguments".to_string()),
     };
     match token {
       Token::Space(_) => (),
       &Token::ParenthesisOpening => break,
       t => {
         return Some(format!(
-          "execute var : found '{}' in opening separator (must be Token::ParenthesisOpening)",
+          "Found '{}' in opening separator (must be Token::ParenthesisOpening)",
           t
         ))
       }
@@ -54,7 +55,9 @@ fn resolve_fct<'a>(
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => return Some("execute var : must be ended".to_string()),
+      None => {
+        return Some("The call expression must be terminated by a closing parenthesis".to_string())
+      }
     };
     match token {
       Token::Space(_) => (),
@@ -67,7 +70,7 @@ fn resolve_fct<'a>(
       &Token::ParenthesisEnding => break,
       t => {
         return Some(format!(
-          "execute var : found '{}' in first part (must be Token::Symbol)",
+          "Found '{}' in first part (must be Token::Symbol for the function name)",
           t
         ))
       }
@@ -75,13 +78,19 @@ fn resolve_fct<'a>(
   }
   let f: Vec<&str> = fct.splitn(2, '.').collect();
   if f.len() < 2 {
-    return Some(format!("invalid name function '{}'", fct));
+    return Some(format!(
+      "Invalid function name found '{}' (must be in the form '[extension name].[function name]')",
+      fct
+    ));
   }
   context.fct_name = f.get(1).unwrap().to_string();
   context.args = args;
   match *f.get(0).unwrap() {
     "default" => default::execute(context),
-    n => Some(format!("extension '{}' not found", n)),
+    n => Some(format!(
+      "Extension '{}' not found (--help-extensions argument may assist you)",
+      n
+    )),
   }
 }
 
@@ -92,7 +101,7 @@ fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String>
       Some(r) => return Ok(r.to_string()),
       None => {
         return Err(format!(
-          "execute var : error during casting with unfound env key '{}'",
+          "Error during casting with unfound environment key '{}'",
           v
         ))
       }
@@ -125,7 +134,8 @@ pub fn resolve_unit<'a>(
 ) -> Result<(), InternalError> {
   if doc.conf.no_extensions {
     return Err(create_internal_error!(
-      "execute statement found : not authorized by conf".to_string()
+      "Execute statement found: not authorized by configuration",
+      "the --no-extensions argument was specified"
     ));
   }
   let key: String;
@@ -133,9 +143,10 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
+        println!("---------- > none");
         return Err(create_internal_error!(
-          "execute var : can't be empty".to_string()
-        ))
+          "The statement can't be empty".to_string()
+        ));
       }
     };
     match token {
@@ -146,7 +157,7 @@ pub fn resolve_unit<'a>(
       }
       t => {
         return Err(create_internal_error!(format!(
-          "execute var : found '{}' in first part (must be Token::Symbol)",
+          "Found '{}' in first part (must be Token::Symbol)",
           t
         )));
       }
@@ -157,7 +168,7 @@ pub fn resolve_unit<'a>(
       Some(t) => t,
       None => {
         return Err(create_internal_error!(
-          "execute var : can't be empty (token 'equal' not found)"
+          "At least one function must be called and preceded by an equal sign"
         ))
       }
     };
@@ -166,7 +177,7 @@ pub fn resolve_unit<'a>(
       Token::Equal => break,
       t => {
         return Err(create_internal_error!(format!(
-          "execute var : found '{}' in first part (must be Token::Equal)",
+          "Found '{}' instead of the '=' sign (must be Token::Equal)",
           t
         )));
       }
@@ -176,10 +187,11 @@ pub fn resolve_unit<'a>(
   'outer: loop {
     match resolve_fct(&mut context, iter_tokens) {
       Some(err) => {
-        return Err(create_internal_error!(format!(
-          "execute statement : error during execution : '{}'",
-          err
-        )));
+        let mut err = create_internal_error!(err);
+        return Err(add_step_internal_error!(
+          err,
+          "An error occurred during execution"
+        ));
       }
       None => (),
     }
@@ -193,8 +205,9 @@ pub fn resolve_unit<'a>(
         Token::Space(_) => (),
         Token::Pipe => break 'inner,
         t => {
-          return Err(create_internal_error!(format!(
-            "execute var : found '{}' in first part (must be Token::Pipe)",
+          return Err(
+            create_internal_error!(format!(
+            "The pipe symbol '|' is required between two function calls, found '{}' (must be Token::Pipe)",
             t
           )));
         }
@@ -214,10 +227,11 @@ pub fn resolve_unit<'a>(
   let value = match cast(env, result) {
     Ok(value) => value,
     Err(err) => {
-      return Err(create_internal_error!(format!(
-        "execute var : error during casting : '{}'",
-        err
-      )))
+      let mut err = create_internal_error!(err);
+      return Err(add_step_internal_error!(
+        err,
+        "Error during casting of the final function return"
+      ));
     }
   };
   env.set(key, value);
