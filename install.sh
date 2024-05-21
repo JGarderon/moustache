@@ -6,4 +6,6 @@ RUSTFLAGS="-Zlocation-detail=none" cargo +nightly build -Z build-std=std,panic_a
 
 upx --best --lzma "target/$ARCHI/release/moustache"
 
-cp "target/$ARCHI/release/moustache" ~/.local/bin/moustache
+# cp "target/$ARCHI/release/moustache" ~/.local/bin/moustache
+sudo cp "target/$ARCHI/release/moustache" /usr/bin/moustache
+sudo chmod 775 /usr/bin/moustache

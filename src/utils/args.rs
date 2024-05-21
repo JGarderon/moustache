@@ -1,6 +1,7 @@
 use std::env;
 
 // use utils_macro::modifier_item;
+use crate::engine::extensions::default;
 use crate::utils::APP_AUTHOR;
 use crate::utils::APP_DATE;
 use crate::utils::APP_NAME;
@@ -18,8 +19,12 @@ pub fn parse() -> Result<Configuration, String> {
     }
     match arg.unwrap().as_ref() {
       "--help" | "-h" => c.is_helping(true),
+      "--help-extensions" => c.is_helping_extensions(true),
       "--debug" | "-d" => c.is_debugging(true),
       "--version" => c.display_version(true),
+      "--reentrant" | "-r" => c.is_reentrant(true),
+      "--no-extensions" => c.no_extensions(true),
+      "--error-formatting" => c.error_formatting(true),
       "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
@@ -52,7 +57,6 @@ pub fn parse() -> Result<Configuration, String> {
           ))
         }
       },
-      "--reentrant" | "-r" => c.is_reentrant(true),
       _ => (),
     }
   }
@@ -60,23 +64,45 @@ pub fn parse() -> Result<Configuration, String> {
 }
 
 // #[modifier_item("--help","help")]
-pub fn display_helping() {
-  println!(
-    "{} - {} ({})
+pub fn display_helping(resume: bool) {
+  print!(
+    "
+{} - {} ({})
 by {}
-
-  --help      | -h    display this message and exit (0)
-  --debug     | -d    display the debug
-  --input     | -i    input of process (path ; else stdin)
-  --output    | -o    output of process (path)
-  --var       | -v    add var to env 
-  --reentrant | -r    document is reentrant 
 ",
     APP_NAME, APP_VERSION, APP_DATE, APP_AUTHOR,
   );
+  if resume {
+    println!(
+      "
+  --help      | -h    display this message and exit (0)
+  --debug     | -d    display the debug
+
+  --input +   | -i +  input of process (path ; else stdin) - with arg
+  --output +  | -o +  output of process (path) - with arg
+  --var +     | -v +  add var to env - with arg 
+  --reentrant | -r    document is reentrant 
+  --error-formatting  support of ANSI color and style codes 
+
+  --help-extensions   display extensions documentation and exit (0)
+  --no-extensions     disable extensions (with error)
+"
+    );
+  }
 }
 
 // #[modifier_item("--help","help")]
 pub fn display_version() {
   println!("{}", APP_VERSION);
+}
+
+pub fn display_helping_extensions() {
+  display_helping(false);
+  print!(
+    "
+Extensions documentation
+------------------------
+"
+  );
+  default::help().display();
 }

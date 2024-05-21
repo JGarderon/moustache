@@ -1,14 +1,16 @@
+use crate::create_internal_error;
 use crate::engine::document::Part;
 use crate::engine::parser;
 use crate::engine::resolver::add_string_to_another;
 use crate::engine::Document;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 pub fn resolve_expression<'a>(
   _doc: &'a Document,
   expr: &'a str,
   env: &mut Environment,
-) -> Result<Part, String> {
+) -> Result<Part, InternalError> {
   let source: &str = &expr[2..expr.len() - 2];
   let tokens: Vec<parser::Token> = match parser::parse(source) {
     Ok(t) => t,
@@ -23,22 +25,37 @@ pub fn resolve_expression<'a>(
       None => break,
     };
     match token {
-      parser::Token::Text(_, _) if is_begining == false => {
-        return Err(format!("invalid position's text in expression"))
+      &parser::Token::Text(s, e) if is_begining == false => {
+        return Err(
+          create_internal_error!(
+            format!(
+              "Invalid position's text in expression: the operator '+' is likely missing (found '{}' at {} ~> {})",
+              &source[s..e],
+              s,
+              e
+            )
+          )
+        )
       }
-      parser::Token::Symbol(s, e) if is_begining == false => {
-        return Err(format!(
-          "invalid position's symbol in expression {}:{}",
-          s, e
-        ))
+      &parser::Token::Symbol(s, e) if is_begining == false => {
+        return Err(
+          create_internal_error!(
+            format!(
+              "Invalid position's symbol in expression: the operator '+' is likely missing (found '{}' at {} ~> {})",
+              &source[s..e],
+              s,
+              e
+            )
+          )
+        )
       }
       parser::Token::Plus if is_begining => {
-        return Err(format!(
-          "token {} not authorized in expression begining",
-          token
-        ))
+        return Err(
+          create_internal_error!(
+            "The operator '+' is not allowed at the beginning of the expression or more than once in a row"
+          )
+        )
       }
-
       parser::Token::Text(s, e) if is_begining => {
         add_string_to_another(&mut source[*s..*e].to_string(), &mut output);
         is_begining = false;
@@ -47,7 +64,12 @@ pub fn resolve_expression<'a>(
         let symbol = source[*s..*e].to_string();
         match env.get(&symbol) {
           Some(v) => output.push_str(v),
-          None => return Err(format!("key '{}' not found in env (expr)", symbol)),
+          None => {
+            return Err(create_internal_error!(format!(
+              "Undefined variable '{}' in environment",
+              symbol
+            )))
+          }
         }
         is_begining = false;
       }
@@ -66,28 +88,38 @@ pub fn resolve_expression<'a>(
                   &mut v[..].to_string(), // pas terrible...
                   &mut output,
                 ),
-                None => return Err(format!("key '{}' not found in env ('plus' expr)", symbol)),
+                None => {
+                  return Err(create_internal_error!(format!(
+                    "Undefined variable '{}' in environment",
+                    symbol
+                  )))
+                }
               }
               is_begining = false;
               break;
             }
             Some(parser::Token::Space(_)) => continue,
             Some(t) => {
-              return Err(format!(
-                "token {} not authorized in second part of 'plus' expression",
+              return Err(create_internal_error!(format!(
+                "Token {} not authorized in second part of expression (after '+'; must be text or symbol)",
                 t
-              ))
+              )))
             }
             None => {
-              return Err(format!(
-                "no token found for second part in 'plus' expression"
+              return Err(create_internal_error!(
+                "No token found for second part of expression (after '+')"
               ))
             }
           };
         }
       }
       parser::Token::Space(_) => (),
-      t => return Err(format!("token {} not authorized in expression", t)),
+      t => {
+        return Err(create_internal_error!(format!(
+          "Token {} not authorized in second part of expression (at beginning; must be text or symbol)",
+          t
+        )))
+      }
     }
   }
   Ok(Part::GeneratedText(output))

@@ -1,10 +1,13 @@
 use core::iter::Peekable;
 use core::slice::Iter;
 
+use crate::add_step_internal_error;
+use crate::create_internal_error;
 use crate::engine::resolver::statement::Token;
 use crate::engine::resolver::Part;
 use crate::engine::Document;
 use crate::engine::Environment;
+use crate::utils::error::InternalError;
 
 #[derive(Debug)]
 struct Condition {
@@ -64,7 +67,7 @@ fn terminal(
 fn exp_symbol_or_text<'a>(
   condition: &mut Condition,
   tokens: &Vec<&Token>,
-  position: usize,
+  mut position: usize,
 ) -> ResultTokenPosition {
   match terminal(true, Token::Symbol(0, 0), tokens, position) {
     ResultTokenPosition::True(p) => match tokens.get(p) {
@@ -105,7 +108,19 @@ fn exp_symbol_or_text<'a>(
         )
       }
     },
-    ResultTokenPosition::False => return ResultTokenPosition::False,
+    ResultTokenPosition::False => loop {
+      match tokens.get(position) {
+        Some(Token::Space(_)) => (),
+        Some(t) => {
+          return ResultTokenPosition::Error(format!(
+            "Invalid token found : {} (must be a symbol or text)",
+            t
+          ))
+        }
+        None => return ResultTokenPosition::False,
+      }
+      position += 1;
+    },
     ResultTokenPosition::Error(err) => return ResultTokenPosition::Error(err),
   }
 }
@@ -347,16 +362,18 @@ fn exp_general<'a>(
   ResultTokenPosition::True(position)
 }
 
-fn parse_tokens<'a>(tokens: Vec<&Token>) -> Result<Condition, String> {
+fn verify_tokens<'a>(tokens: Vec<&Token>) -> Result<Condition, InternalError> {
   if tokens.len() == 0 {
-    return Err("condition is blank".to_string());
+    return Err(create_internal_error!(
+      "The condition is empty (no assertion provided)"
+    ));
   }
   let position = 0;
   let mut condition = Condition::new();
   return match exp_general(&mut condition, &tokens, position) {
     ResultTokenPosition::True(_) => Ok(condition),
-    ResultTokenPosition::False => Err("condition is invalid".to_string()),
-    ResultTokenPosition::Error(err) => Err(err),
+    ResultTokenPosition::False => Err(create_internal_error!("The condition is invalid")),
+    ResultTokenPosition::Error(err) => Err(create_internal_error!(err)),
   };
 }
 
@@ -365,32 +382,72 @@ fn resolve_exp<'a>(
   source: &'a str,
   condition: &Condition,
   mut position: usize,
-) -> Result<(bool, usize), String> {
+) -> Result<(bool, usize), InternalError> {
   let mut result = false;
   let mut operator_and: Option<bool> = None;
   let mut beginning = true;
   loop {
     match condition.parts.get(position) {
-      Some(ConditionPart::Text(_,_)) | Some(ConditionPart::Symbol(_,_)) => return Err("internal error : invalid logic in expression resolver in condition (found ConditionPart::[Text or Symbol])".to_string()),
-      Some(ConditionPart::EqualComparator) | Some(ConditionPart::NonEqualComparator) => return Err("internal error : invalid logic in expression resolver in condition (found ConditionPart::[EqualComparator or NonEqualComparator])".to_string()),
-      Some(ConditionPart::AndOperator) => if operator_and == None {
-        operator_and = Some(true);
-      } else {
-        return Err("internal error : invalid logic in expression resolver in condition (two operators found)".to_string());
+      Some(ConditionPart::Text(_, _)) | Some(ConditionPart::Symbol(_, _)) => {
+        return Err(create_internal_error!(
+          "The expression resolver encountered invalid logic in the condition",
+          "Expecting : ConditionPart::[Text or Symbol]"
+        ))
       }
-      Some(ConditionPart::OrOperator) => if operator_and == None {
-        operator_and = Some(false);
-      } else {
-        return Err("internal error : invalid logic in expression resolver in condition (two operators found)".to_string());
+      Some(ConditionPart::EqualComparator) | Some(ConditionPart::NonEqualComparator) => {
+        return Err(create_internal_error!(
+          "Invalid logic in expression resolver in condition",
+          "Found ConditionPart::[EqualComparator or NonEqualComparator])"
+        ))
       }
-      Some(ConditionPart::Assertion(_, _, _, _, _, _, _)) if operator_and == None && beginning == false => return Err("internal error : invalid logic in expression resolver in condition (no operator found between two assertions)".to_string()),
-      Some(ConditionPart::Assertion(is_equal, first_is_symbol, first_start, first_end, second_is_symbol, second_start, second_end)) => {
+      Some(ConditionPart::AndOperator) => {
+        if operator_and == None {
+          operator_and = Some(true);
+        } else {
+          return Err(create_internal_error!(
+            "Invalid logic in expression resolver in condition",
+            "Two consecutive operators found (second : 'and')"
+          ));
+        }
+      }
+      Some(ConditionPart::OrOperator) => {
+        if operator_and == None {
+          operator_and = Some(false);
+        } else {
+          return Err(create_internal_error!(
+            "Invalid logic in expression resolver in condition",
+            "Two consecutive operators found (second : 'or')"
+          ));
+        }
+      }
+      Some(ConditionPart::Assertion(_, _, _, _, _, _, _))
+        if operator_and == None && beginning == false =>
+      {
+        return Err(create_internal_error!(
+          "Invalid logic in expression resolver in condition",
+          "No operator found between two assertions"
+        ))
+      }
+      Some(ConditionPart::Assertion(
+        is_equal,
+        first_is_symbol,
+        first_start,
+        first_end,
+        second_is_symbol,
+        second_start,
+        second_end,
+      )) => {
         let first: String;
         if *first_is_symbol {
           let key: String = source[*first_start..*first_end].to_string();
           match env.get(&key) {
             Some(v) => first = v.to_string(),
-            None => return Err(format!("invalid var '{}' in condition", key)),
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}' in condition",
+                key
+              )))
+            }
           }
         } else {
           first = source[*first_start..*first_end].to_string();
@@ -400,7 +457,12 @@ fn resolve_exp<'a>(
           let key: String = source[*second_start..*second_end].to_string();
           match env.get(&key) {
             Some(v) => second = v.to_string(),
-            None => return Err(format!("invalid var '{}' in condition", key)),
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}' in condition",
+                key
+              )))
+            }
           }
         } else {
           second = source[*second_start..*second_end].to_string();
@@ -421,18 +483,20 @@ fn resolve_exp<'a>(
           result = r;
         }
       }
-      Some(ConditionPart::GroupOpening) => match resolve_exp(env, source, condition, position+1) {
-        Ok((r, p)) => {
-          position = p;
-          if operator_and == Some(true) {
-            result &= r;
-          } else {
-            return Ok((result, position+1));
+      Some(ConditionPart::GroupOpening) => {
+        match resolve_exp(env, source, condition, position + 1) {
+          Ok((r, p)) => {
+            position = p;
+            if operator_and == Some(true) {
+              result &= r;
+            } else {
+              return Ok((result, position + 1));
+            }
           }
+          Err(err) => return Err(err),
         }
-        Err(err) => return Err(err),
       }
-      Some(ConditionPart::GroupEnding) | None => return Ok((result, position+1)),
+      Some(ConditionPart::GroupEnding) | None => return Ok((result, position + 1)),
     }
     position += 1;
     beginning = false;
@@ -443,7 +507,7 @@ fn resolve_condition<'a>(
   env: &Environment,
   source: &'a str,
   condition: Condition,
-) -> Result<bool, String> {
+) -> Result<bool, InternalError> {
   match resolve_exp(env, source, &condition, 0) {
     Ok((r, _)) => Ok(r),
     Err(err) => Err(err),
@@ -456,7 +520,7 @@ pub fn resolve_unit<'a>(
   env: &mut Environment,
   source: &'a str,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
-) -> Result<(Vec<Part>, usize), String> {
+) -> Result<(Vec<Part>, usize), InternalError> {
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
   loop {
@@ -465,7 +529,13 @@ pub fn resolve_unit<'a>(
         block_ending_position = position;
         part
       }
-      None => return Err("unfinished block".to_string()),
+      None => return Err(
+        create_internal_error!(
+          "Unfinished block",
+          "must be = '\x1b[3mif [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... )\x1b[0m'",
+          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+        )
+      ),
     };
     match part {
       &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endif" => break,
@@ -473,16 +543,25 @@ pub fn resolve_unit<'a>(
     }
   }
   let tokens = iter_tokens.collect::<Vec<&Token>>();
-  let condition = match parse_tokens(tokens) {
+  let condition = match verify_tokens(tokens) {
     Ok(c) => c,
-    Err(err) => return Err(format!("error during conditional tokens parsing : {}", err)),
+    Err(mut err) => {
+      return Err(add_step_internal_error!(
+        err,
+        "Error during conditional tokens parsing ('verify tokens' step)",
+        "must be = '\x1b[3mif [symbol or text] ['==' or '!='] [symbol or text] ( ['&&' or '||'] ... )\x1b[0m'",
+        format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+      ))
+    }
   };
   let result = match resolve_condition(env, source, condition) {
     Ok(r) => r,
-    Err(err) => {
-      return Err(format!(
-        "error during conditional tokens resolving : {}",
-        err
+    Err(mut err) => {
+      return Err(add_step_internal_error!(
+        err,
+        "Error during conditional tokens resolving ('resolve condition' step)",
+        "must be = '\x1b[3mif [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... )\x1b[0m'",
+        format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
       ))
     }
   };
