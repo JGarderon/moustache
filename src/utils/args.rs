@@ -1,7 +1,7 @@
 use std::env;
 
 // use utils_macro::modifier_item;
-use crate::engine::extensions::default;
+use crate::engine::extensions;
 use crate::utils::APP_AUTHOR;
 use crate::utils::APP_DATE;
 use crate::utils::APP_NAME;
@@ -104,5 +104,5 @@ Extensions documentation
 ------------------------
 "
   );
-  default::help().display();
+  extensions::help();
 }
