@@ -142,7 +142,7 @@ fn main() {
         let _ = display_debug_block!(conf, "Write output", "Path = {:?}", path);
       }
     },
-    None => println!("{}", doc.source),
+    None => print!("{}", doc.source),
   }
 
   display_debug_title!(conf, "End of program, no errors");

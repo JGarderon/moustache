@@ -1,24 +1,8 @@
-pub mod default;
-pub mod r#macro;
+pub mod ext_default;
+pub mod ext_macro;
 
 use crate::engine::Document;
 use crate::engine::Environment;
-
-pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
-  match module {
-    m if m == default::MODULE_NAME => default::execute(context),
-    m if m == r#macro::MODULE_NAME => r#macro::execute(context),
-    m => Some(format!(
-      "Extension '{}' not found (--help-extensions argument may assist you)",
-      m
-    )),
-  }
-}
-
-pub fn help() {
-  default::help().display();
-  r#macro::help().display();
-}
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -107,4 +91,20 @@ impl HelperFunction {
       self.function_args,
     );
   }
+}
+
+pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
+  match module {
+    m if m == ext_default::MODULE_NAME => ext_default::execute(context),
+    m if m == ext_macro::MODULE_NAME => ext_macro::execute(context),
+    m => Some(format!(
+      "Extension '{}' not found (--help-extensions argument may assist you)",
+      m
+    )),
+  }
+}
+
+pub fn help() {
+  ext_default::help().display();
+  ext_macro::help().display();
 }
