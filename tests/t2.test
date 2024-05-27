@@ -1,0 +1,7 @@
+---separator
+moustache -v myvar="all fine"
+---separator
+{% set myvar = "all fine but another" %}{{ myvar }}
+---separator
+all fine but another
+---separator

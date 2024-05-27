@@ -1,0 +1,29 @@
+---separator
+moustache -v myvar="all fine" -v my_another_var="!"
+---separator
+{{ myvar }}
+{{myvar}}
+{{ myvar}}
+{{myvar }}
+{{ myvar + my_another_var }}
+{{ myvar+my_another_var }}
+{{ myvar+ my_another_var }}
+{{ myvar +my_another_var }}
+{{myvar+my_another_var}}
+{{ myvar+my_another_var}}
+{{myvar+my_another_var }}
+{{ myvar + my_another_var + my_another_var }}
+---separator
+all fine
+all fine
+all fine
+all fine
+all fine!
+all fine!
+all fine!
+all fine!
+all fine!
+all fine!
+all fine!
+all fine!!
+---separator

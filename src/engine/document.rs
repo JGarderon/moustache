@@ -2,6 +2,7 @@ use std::fs;
 
 use crate::create_internal_error;
 use crate::engine::environment;
+use crate::engine::Environment;
 use crate::engine::resolver;
 use crate::utils::conf::Configuration;
 use crate::utils::error::InternalError;
@@ -172,7 +173,8 @@ impl<'c> Document<'c> {
     }
     Ok(true)
   }
-  pub fn transform(&mut self) {
+  pub fn transform(&mut self, env: &mut Environment) {
+    env.transform(self);
     let mut destination: String = "".to_string();
     for p in &self.stack {
       match p {
