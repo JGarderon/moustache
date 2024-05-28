@@ -27,3 +27,12 @@ lto = true
 codegen-units = 1
 panic = "abort"
 ```	
+
+### Divers 
+
+```
+clear ; clear ; DEBUG=1 ./install.sh
+clear ; clear ; cargo build --release && DEBUG=1 ./tests/tests.sh "target/release/moustachet" "./tests/*.test"
+clear ; clear ; RUST_BACKTRACE=1 cargo run -- -r --input ./local_tests/source4.test -v myvar="very"
+```
+

@@ -33,7 +33,11 @@ then
 fi
 
 echo "--> INSTALLATION step"
-# sudo cp "target/$ARCHI/release/moustache" /usr/bin/moustache
-# sudo chmod 775 /usr/bin/moustache
 cp "target/$ARCHI/release/moustache" ~/.local/bin/moustache
 echo "Installation in your local bin directory"
+if [ "$1" = "+sudo" ]
+then
+	sudo cp "target/$ARCHI/release/moustache" /usr/bin/moustache
+	sudo chmod 775 /usr/bin/moustache
+	echo "Installation in your general bin directory"
+fi

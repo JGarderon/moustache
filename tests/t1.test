@@ -1,5 +1,5 @@
 ---separator
-moustache -v myvar="all fine" -v my_another_var="!"
+$moustache -v myvar="all fine" -v my_another_var="!" 
 ---separator
 {{ myvar }}
 {{myvar}}

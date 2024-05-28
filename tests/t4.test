@@ -1,5 +1,5 @@
 ---separator
-moustache -r -v myvar=very
+$moustache -r -v myvar=very
 ---separator
 {% block "myblock" %}all is {{ myvar }} fine!{% endblock %}
 {% call "myblock" %}

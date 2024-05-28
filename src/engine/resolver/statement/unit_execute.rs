@@ -140,7 +140,6 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        println!("---------- > none");
         return Err(create_internal_error!(
           "The statement can't be empty".to_string()
         ));

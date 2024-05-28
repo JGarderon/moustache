@@ -1,7 +1,13 @@
 ---separator
-moustache -v myvar="all fine"
+$moustache -v myvar="all fine"
 ---separator
 {% set myvar = "all fine but another" %}{{ myvar }}
+{% set a = "0" ! if empty %}{{ a }}
+{% set a = "1" %}{{ a }}
+{% set a = "2" ! if setted %}{{ a }}
 ---separator
 all fine but another
+0
+1
+2
 ---separator

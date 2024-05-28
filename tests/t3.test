@@ -1,5 +1,5 @@
 ---separator
-moustache 2>&1 || exit 0
+$moustache 2>&1 || exit 0
 ---separator
 {{ undefined_var }}
 ---separator

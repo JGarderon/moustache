@@ -16,10 +16,7 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        return Err(create_internal_error!(
-          "Statement can't be empty",
-          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
-        ))
+        return Err(create_internal_error!("Statement can't be empty"))
       }
     };
     match token {
@@ -30,12 +27,7 @@ pub fn resolve_unit<'a>(
       }
       t => {
         return Err(create_internal_error!(
-          format!("Found '{}' in first part (must be Token::Symbol)", t),
-          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!(
-            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
-            source.trim()
-          )
+          format!("Found '{}' in first part (must be Token::Symbol)", t)
         ));
       }
     }
@@ -45,12 +37,7 @@ pub fn resolve_unit<'a>(
       Some(t) => t,
       None => {
         return Err(create_internal_error!(
-          "Statement must be complete (token 'equal' not found, premature end)",
-          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!(
-            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
-            source.trim()
-          )
+          "Statement must be complete (token 'equal' not found, premature end)"
         ))
       }
     };
@@ -60,12 +47,7 @@ pub fn resolve_unit<'a>(
       t => {
         return Err(create_internal_error!(
           "Incorrect token after the first part (must be Token::Equal)",
-          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!(
-            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (incorrect token : {})",
-            source.trim(),
-            t
-          )
+          format!("token found: {})", t)
         ))
       }
     }
@@ -73,6 +55,7 @@ pub fn resolve_unit<'a>(
   let mut value: Vec<String> = vec![];
   let mut begining: bool = true;
   let mut operator: bool = false;
+  let mut if_part: bool = false; 
   loop {
     let token =
       match iter_tokens.next() {
@@ -80,14 +63,11 @@ pub fn resolve_unit<'a>(
         None => {
           if begining {
             return Err(create_internal_error!(
-            "The second part cannot be empty",
-            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+            "The second part cannot be empty"
           ));
           } else if operator == false {
             return Err(create_internal_error!(
-            "Invalid ending : an operator without symbol or text after",
-            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-            format!("found statement (here with trim !) = '\x1b[3m{}\x1b[0m'", source.trim())
+            "Invalid ending : an operator without symbol or text after"
           ));
           } else {
             break;
@@ -113,10 +93,8 @@ pub fn resolve_unit<'a>(
         } else {
           return Err(create_internal_error!(
             "Operator missing between symbol or text",
-            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
             format!(
-              "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (error on symbol : '{}' - position {} ~> {})",
-              source.trim(),
+              "error on symbol : '{}' - position {} ~> {}",
               key,
               s,
               e
@@ -131,10 +109,8 @@ pub fn resolve_unit<'a>(
         } else {
           return Err(create_internal_error!(
             "Operator missing between symbol or text",
-            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
             format!(
-              "found statement (here with trim !) = '\x1b[3m{}\x1b[0m' (error on text : '{}' - position {} ~> {})",
-              source.trim(),
+              "error on text : '{}' - position {} ~> {}",
               source[s..e].to_string(),
               s,
               e
@@ -142,28 +118,112 @@ pub fn resolve_unit<'a>(
           ));
         }
       }
-      &Token::Plus => {
+      Token::Plus => {
         if operator == true {
           operator = false;
         } else {
           return Err(create_internal_error!(
-            "Symbol or text missing before operator",
-            "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+            "Symbol or text missing before operator"
+          ));
+        }
+      }
+      Token::Exclamation => {
+        if operator == true {
+          if_part = true;
+          break;
+        } else {
+          return Err(create_internal_error!(
+            "an 'if' part cannot directly follow an operator"
           ));
         }
       }
       t => {
         return Err(create_internal_error!(
-          format!("Found '{}' in first part (must be Token::Symbol)", t),
-          "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'",
-          format!(
-            "found statement (here with trim !) = '\x1b[3m{}\x1b[0m'",
-            source.trim()
-          )
+          format!("Found '{}' in second part (must be Token::Symbol)", t)
         ))
       }
     }
   }
-  env.set(key, value.into_iter().collect::<String>());
+  let mut empty: bool = true;
+  if if_part {
+    loop {
+      let token = match iter_tokens.next() {
+        Some(t) => t,
+        None => {
+          return Err(create_internal_error!("'if' part can't be empty (first token)"))
+        }
+      };
+      match token {
+        Token::Space(_) => (),
+        &Token::Symbol(s, e) => {
+          let s: &str = &source[s..e];
+          if s == "if" {
+            break;
+          } else {
+            return Err(create_internal_error!(
+              format!("Found '{}' in 'if' part of statement (must be Token::Symbol['if'])", s)
+            ));
+          }
+        }
+        t => {
+          return Err(create_internal_error!(
+            format!("Found '{}' in 'if' part of statement (must be Token::Symbol['if'])", t)
+          ));
+        }
+      }
+    }
+    loop {
+      let token = match iter_tokens.next() {
+        Some(t) => t,
+        None => {
+          return Err(create_internal_error!("'if' part can't be empty (second token)"))
+        }
+      };
+      match token {
+        Token::Space(_) => (),
+        &Token::Symbol(s, e) => {
+          match &source[s..e] {
+            "empty" => break,
+            "setted" => {
+              empty = false;
+              break;
+            },
+            s => return Err(create_internal_error!(
+              format!("Found '{}' in 'if' part of statement (must be Token::Symbol['empty' or 'setted'])", s)
+            ))
+          }
+        }
+        t => {
+          return Err(create_internal_error!(
+            format!("Found '{}' in 'if' part of statement (must be Token::Symbol['if'])", t)
+          ));
+        }
+      }
+    }
+  }
+  let setting: bool = if if_part {
+    let exists = match env.get(&key) {
+      Some(_) => true,
+      None => false,
+    };
+    if empty {
+      if exists {
+        false
+      } else {
+        true
+      }
+    } else {
+      if exists {
+        true
+      } else {
+        false
+      }      
+    }
+  } else {
+    true
+  };
+  if setting {
+    env.set(key, value.into_iter().collect::<String>());
+  } 
   Ok(())
 }

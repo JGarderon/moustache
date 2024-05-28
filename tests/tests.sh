@@ -57,14 +57,9 @@ function execute_test () {
   retrieve_part $TESTFILE_PATH $TESTFILE_SEPARATOR "SOURCE_OUT"
   # --- step 4
   display_result "process command : '$TEST_COMMAND'"
-  RESULT="`tail -n "+$SOURCE_IN_START" "$TESTFILE_PATH" | head -n "$SOURCE_IN_END" | sh -c "alias moustache=$EXEC_PATH; $TEST_COMMAND 2>&1"`" 
-  RETURNCODE="$?"
-  if [ "$RETURNCODE" != 0 ]
-  then
-    return 1
-  fi
-  RESULT=$(echo $RESULT | LC_ALL=C.UTF8 sed -E "s/\x1B\[[\x30-\x3F]*[\x20-\x20F]*[\x40-\x7E]//g")
+  RESULT="`tail -n "+$SOURCE_IN_START" "$TESTFILE_PATH" | head -n "$SOURCE_IN_END" | sh -c "moustache='$EXEC_PATH'; $TEST_COMMAND 2>&1"`" 
   EXPECTED_RESULT="`tail -n "+$SOURCE_OUT_START" "$TESTFILE_PATH" | head -n "$SOURCE_OUT_END"`" 
+  RESULT=$(echo $RESULT | LC_ALL=C.UTF8 sed -E "s/\x1B\[[\x30-\x3F]*[\x20-\x20F]*[\x40-\x7E]//g")
   EXPECTED_RESULT=$(echo $EXPECTED_RESULT | LC_ALL=C.UTF8 sed -E "s/\x1B\[[\x30-\x3F]*[\x20-\x20F]*[\x40-\x7E]//g")
   debug "return : !EOF"
   debug "$RESULT"
@@ -72,6 +67,7 @@ function execute_test () {
   debug "expected : !EOF"
   debug "$EXPECTED_RESULT"
   debug "EOF!"
+  echo "return code $RETURNCODE"
   if [ "$EXPECTED_RESULT" = "$RESULT" ]
   then
     debug "expected result found"
@@ -108,6 +104,8 @@ if [ "$DEBUG" == "0" ]
 then
   DEBUG=
 fi
+
+display_title "EXECUTE PATH = $1"
 
 SUM=0
 KO=0
