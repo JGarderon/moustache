@@ -1,4 +1,5 @@
-pub mod default;
+pub mod ext_default;
+pub mod ext_macro;
 
 use crate::engine::Document;
 use crate::engine::Environment;
@@ -23,7 +24,7 @@ pub struct Context<'a> {
   pub doc_position: usize,
   pub env: &'a mut Environment,
   pub source: &'a str,
-  pub fct_name: String,
+  pub fct_name: &'a str,
   pub args: Vec<Value>,
 }
 
@@ -41,7 +42,7 @@ impl<'a> Context<'a> {
       doc_position: doc_position,
       env: env,
       source: source,
-      fct_name: "".to_string(),
+      fct_name: &source[0..0],
       args: vec![],
     }
   }
@@ -51,7 +52,6 @@ impl<'a> Context<'a> {
 pub struct Helper {
   module_name: &'static str,
   module_description: &'static str,
-  module_autor: &'static str,
   functions: Vec<HelperFunction>,
 }
 
@@ -59,9 +59,9 @@ impl Helper {
   pub fn display(&self) {
     println!(
       "
-  ♦ Extension '{}' - by {} 
+  ♦ Extension '{}' 
     {}",
-      self.module_name, self.module_autor, self.module_description
+      self.module_name, self.module_description
     );
     for f in self.functions.iter() {
       f.display();
@@ -91,4 +91,20 @@ impl HelperFunction {
       self.function_args,
     );
   }
+}
+
+pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
+  match module {
+    m if m == ext_default::MODULE_NAME => ext_default::execute(context),
+    m if m == ext_macro::MODULE_NAME => ext_macro::execute(context),
+    m => Some(format!(
+      "Extension '{}' not found (--help-extensions argument may assist you)",
+      m
+    )),
+  }
+}
+
+pub fn help() {
+  ext_default::help().display();
+  ext_macro::help().display();
 }

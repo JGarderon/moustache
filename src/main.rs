@@ -108,7 +108,7 @@ fn main() {
       Ok(changed) => {
         if changed {
           let _ = display_debug_block!(conf, "Resolve parts", "Document is changed");
-          doc.transform();
+          doc.transform(&mut env);
         } else {
           if reentrance > 0 {
             let _ = display_debug_block!(conf, "Resolve parts", "Document is not changed");
@@ -142,7 +142,7 @@ fn main() {
         let _ = display_debug_block!(conf, "Write output", "Path = {:?}", path);
       }
     },
-    None => println!("{}", doc.source),
+    None => print!("{}", doc.source),
   }
 
   display_debug_title!(conf, "End of program, no errors");

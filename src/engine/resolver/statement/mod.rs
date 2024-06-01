@@ -109,7 +109,8 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'set' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
+              "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
             ))
           }
         },
@@ -118,8 +119,7 @@ pub fn resolve_statement<'a>(
           Err(mut err) => {
             return Err(add_step_internal_error!(
               err,
-              "error in 'execute' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              "error in 'execute' statement"
             ))
           }
         },

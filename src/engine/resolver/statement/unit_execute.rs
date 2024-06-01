@@ -3,7 +3,7 @@ use std::iter::Peekable;
 
 use crate::add_step_internal_error;
 use crate::create_internal_error;
-use crate::engine::extensions::default;
+use crate::engine::extensions;
 use crate::engine::extensions::Context;
 use crate::engine::extensions::Value;
 use crate::engine::resolver::statement::Token;
@@ -15,7 +15,7 @@ fn resolve_fct<'a>(
   context: &mut Context,
   iter_tokens: &mut Peekable<Iter<'_, Token>>,
 ) -> Option<String> {
-  let fct: String;
+  let fct: &str;
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
@@ -24,7 +24,7 @@ fn resolve_fct<'a>(
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) => {
-        fct = context.source[s..e].to_string();
+        fct = &context.source[s..e];
         break;
       }
       t => {
@@ -83,15 +83,12 @@ fn resolve_fct<'a>(
       fct
     ));
   }
-  context.fct_name = f.get(1).unwrap().to_string();
+  context.fct_name = f.get(1).unwrap();
   context.args = args;
-  match *f.get(0).unwrap() {
-    "default" => default::execute(context),
-    n => Some(format!(
-      "Extension '{}' not found (--help-extensions argument may assist you)",
-      n
-    )),
-  }
+  extensions::execute(
+    f.get(0).unwrap(),
+    context,
+  )
 }
 
 fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String> {
@@ -143,7 +140,6 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        println!("---------- > none");
         return Err(create_internal_error!(
           "The statement can't be empty".to_string()
         ));
