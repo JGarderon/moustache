@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::engine::document::Part;
 use crate::utils::conf::Configuration;
+use crate::engine::Document;
 
 #[derive(Debug)]
 pub struct Environment {
@@ -34,5 +35,20 @@ impl Environment {
   }
   pub fn get_block(&self, key: &String) -> Option<&Vec<Part>> {
     self.blocks.get(key)
+  }
+  pub fn transform(&mut self, doc: &Document) {
+    for block in self.blocks.values_mut() {
+      let mut destination: String = "".to_string();
+      for value in &mut *block {
+        match value {
+          &mut Part::StaticText(s, e) => destination.push_str(&doc.source[s..e]),
+          Part::GeneratedText(s) => destination.push_str(&s[..]),
+          &mut Part::Statement(s, e) => destination.push_str(&doc.source[s..e]),
+          &mut Part::Expression(s, e) => destination.push_str(&doc.source[s..e]),
+          Part::Comment(_, _) => (),
+        }
+      }
+      *block = vec!(Part::GeneratedText(destination));
+    }
   }
 }

@@ -1,4 +1,4 @@
-tests/
+local_tests/
 Cargo.lock
 target/
 utils_macro/

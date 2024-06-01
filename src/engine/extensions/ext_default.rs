@@ -3,7 +3,7 @@ use crate::engine::extensions::Helper;
 use crate::engine::extensions::HelperFunction;
 use crate::engine::extensions::Value;
 
-static MODULE_NAME: &'static str = "default";
+pub static MODULE_NAME: &'static str = "default";
 
 fn recursive_uppercase(value: Value) -> Value {
   match value {
@@ -92,7 +92,6 @@ pub fn help() -> Helper {
   Helper {
     module_name: MODULE_NAME,
     module_description: "Generic functions (UTF-8 compatibility)",
-    module_autor: "Julien Garderon <julien.garderon@gmail.com>",
     functions: vec![
       HelperFunction {
         function_name: "uppercase",

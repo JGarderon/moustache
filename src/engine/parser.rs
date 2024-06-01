@@ -100,10 +100,6 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, InternalError> {
   let mut portion_start: usize = 0;
   let mut is_escaping: bool = false;
   for (i, c) in source.char_indices() {
-    // println!(
-    //   "(boucle) i = {:?} ; c = {:?} ; is_text = {:?} ; portion_start = {:?} ; is_escaping = {:?}",
-    //   i, c, is_text, portion_start, is_escaping
-    // );
     if is_text == true && is_escaping == true {
       is_escaping = false;
       continue;
@@ -112,7 +108,7 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, InternalError> {
     }
     match c {
       ' ' | '\t' | '\n' | '\r' if is_text == false => {
-        if i > 0 && portion_start < i - 1 {
+        if i > 0 && portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         let space_type = match c {
@@ -132,70 +128,70 @@ pub fn parse<'a>(source: &'a str) -> Result<Vec<Token>, InternalError> {
         portion_start = i + 1;
       }
       '(' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::ParenthesisOpening);
         portion_start = i + 1;
       }
       ')' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::ParenthesisEnding);
         portion_start = i + 1;
       }
       '+' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Plus);
         portion_start = i + 1;
       }
       '-' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Minus);
         portion_start = i + 1;
       }
       '=' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Equal);
         portion_start = i + 1;
       }
       '/' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Divide);
         portion_start = i + 1;
       }
       '*' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Multiply);
         portion_start = i + 1;
       }
       '|' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Pipe);
         portion_start = i + 1;
       }
       '&' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Ampersand);
         portion_start = i + 1;
       }
       '!' if is_text == false => {
-        if portion_start < i - 1 {
+        if portion_start < i {
           stack.push(Token::Symbol(portion_start, i));
         }
         stack.push(Token::Exclamation);

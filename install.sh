@@ -25,8 +25,19 @@ else
     echo "See : https://linux.die.net/man/1/upx"
 fi
 
+echo "--> TESTS step"
+./tests/tests.sh "target/$ARCHI/release/moustache" "./tests/*.test"
+if [ $? != 0 ]
+then
+	exit 1
+fi
+
 echo "--> INSTALLATION step"
-# sudo cp "target/$ARCHI/release/moustache" /usr/bin/moustache
-# sudo chmod 775 /usr/bin/moustache
 cp "target/$ARCHI/release/moustache" ~/.local/bin/moustache
 echo "Installation in your local bin directory"
+if [ "$1" = "+sudo" ]
+then
+	sudo cp "target/$ARCHI/release/moustache" /usr/bin/moustache
+	sudo chmod 775 /usr/bin/moustache
+	echo "Installation in your general bin directory"
+fi
