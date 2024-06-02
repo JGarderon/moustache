@@ -6,6 +6,8 @@ use crate::engine::Environment;
 use crate::engine::resolver;
 use crate::utils::conf::Configuration;
 use crate::utils::error::InternalError;
+use crate::display_debug_block;
+use crate::display_debug;
 
 #[derive(Debug)]
 pub struct Document<'c> {
@@ -201,11 +203,18 @@ impl<'c> Document<'c> {
       Err(err) => Err(err),
     }
   }
-  pub fn write<'a>(&self, output: &'a str) -> Option<String> {
-    match fs::write(output, &self.source) {
-      Ok(_) => None,
-      Err(err) => Some(err.to_string()),
+  pub fn write<'a>(&self) -> Option<String> {
+    match &self.conf.output {
+      Some(path) => {
+        display_debug_block!(self.conf, "Try to write output", "Path = {:?}", path);
+        match fs::write(path, &self.source) {
+          Ok(_) => (),
+          Err(err) => return Some(err.to_string())
+        }
+      },
+      None => print!("{}", self.source),
     }
+    None
   }
 }
 

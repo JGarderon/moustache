@@ -25,6 +25,7 @@ pub fn parse() -> Result<Configuration, String> {
       "--reentrant" | "-r" => c.is_reentrant(true),
       "--no-extensions" => c.no_extensions(true),
       "--error-formatting" => c.error_formatting(true),
+      "--skip-first-line" => c.skip_first_line(true),
       "--input" | "-i" => match iter.peek() {
         Some(next_argument) => c.input = Some(next_argument.to_string()),
         None => {
@@ -83,6 +84,9 @@ by {}
   --var +     | -v +  add var to env - with arg 
   --reentrant | -r    document is reentrant 
   --error-formatting  support of ANSI color and style codes 
+  --skip-first-line   removes the first line of the output, 
+                      for example in the case where the call is made 
+                      via a shebang of the source file
 
   --help-extensions   display extensions documentation and exit (0)
   --no-extensions     disable extensions (with error)
