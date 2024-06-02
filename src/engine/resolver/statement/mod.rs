@@ -6,6 +6,7 @@ pub mod unit_if;
 pub mod unit_include;
 pub mod unit_raw;
 pub mod unit_set;
+pub mod unit_for;
 
 use crate::add_step_internal_error;
 use crate::create_internal_error;
@@ -24,6 +25,7 @@ use crate::engine::resolver::statement::unit_if::resolve_unit as resolve_stateme
 use crate::engine::resolver::statement::unit_include::resolve_unit as resolve_statement_include;
 use crate::engine::resolver::statement::unit_raw::resolve_unit as resolve_statement_raw;
 use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
+use crate::engine::resolver::statement::unit_for::resolve_unit as resolve_statement_for;
 
 #[derive(Debug)]
 pub struct Resolved {
@@ -103,6 +105,20 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'if' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+            ))
+          }
+        },
+        "for" => match resolve_statement_for(doc, doc_position, env, source, &mut iter) {
+          Ok((v, p)) => {
+            output.extend(v);
+            position_skip = p;
+            break;
+          }
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'for' statement",
               format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
             ))
           }

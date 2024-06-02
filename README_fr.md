@@ -114,6 +114,7 @@ C'est là où la magie opère. Une déclaration dans Moustache peut être unitai
     - `if` (`endif`) : conditionne le texte contenu
     - `block` (`endblock`) : définit le texte contenu comme un bloc invoquable
     - `raw` (`endraw`) : n'exécute pas dans le traitement ce qui est dans le texte contenu
+    - `for` (`endfor`) : boucle sur une "liste" (un item par ligne dans une chaîne de caractères) 
 
 ... Chacun a sa propre logique et une grammaire semblable.
 
