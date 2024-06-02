@@ -180,14 +180,14 @@ pub fn resolve_unit<'a>(
       match token {
         Token::Space(_) => (),
         &Token::Symbol(s, e) => match &source[s..e] {
-          "empty" => break,
+          "unset" => break,
           "setted" => {
             empty = false;
             break;
           }
           s => {
             return Err(create_internal_error!(format!(
-              "Found '{}' in 'if' part of statement (must be Token::Symbol['empty' or 'setted'])",
+              "Found '{}' in 'if' part of statement (must be Token::Symbol['unset' or 'setted'])",
               s
             )))
           }
