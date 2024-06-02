@@ -1,22 +1,19 @@
 ---separator
-$moustache 2>&1 || exit 0
+$moustache -r -v myvar=very
 ---separator
-{{ undefined_var }}
+{% block "myblock" %}all is {{ myvar }} fine!{% endblock %}
+{% call "myblock" %}
+{% call "myblock" %}
+{% set name_of_block = "b2" %}
+{% block name_of_block %}no{% endblock %}
+{% call name_of_block %}
+{% block "b2" %}nothing is {{ myvar }} better.{% endblock %}
+{% if myvar == "very" %}
+{% call name_of_block %}
+{% endif %}
 ---separator
-
--- ERROR FOUND
-
-[0] >> Error during resolving
-       v1.0.0-release-candidate/src/main.rs#120)
-
-[1] >> Error in expression
-       v1.0.0-release-candidate/src/engine/resolver/mod.rs#33)
-       real position of expression in document = 0 -> 19
-       target expression (here with trim !) = 'undefined_var'
-       must be in the following form = '{{ text or symbol (+ text or symbol (+ ...)) }}'
-
-[2] >> Undefined variable 'undefined_var' in environment
-       v1.0.0-release-candidate/src/engine/resolver/expression/mod.rs#68)
-
---
+all is very fine!
+all is very fine!
+no
+nothing is very better.
 ---separator
