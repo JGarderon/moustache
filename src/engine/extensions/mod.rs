@@ -102,9 +102,9 @@ impl HelperFunction {
 
 #[cfg(feature = "engine-extensions")]
 mod optional_feature {
-  use crate::engine::extensions::Context;
   use crate::engine::extensions::ext_default;
   use crate::engine::extensions::ext_macro;
+  use crate::engine::extensions::Context;
 
   pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
     match module {
@@ -126,7 +126,7 @@ mod optional_feature {
 mod optional_feature {
   use crate::engine::extensions::Context;
   pub fn execute<'a>(_module: &str, _context: &mut Context) -> Option<String> {
-    Some("Extensions are not available in this version of the engine".to_string()) 
+    Some("Extensions are not available in this version of the engine".to_string())
   }
   pub fn help() {
     println!("Extensions are not available in this version of the engine")
@@ -140,5 +140,3 @@ pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
 pub fn help() {
   optional_feature::help();
 }
-
-

@@ -23,7 +23,7 @@ pub fn resolve_unit<'a>(
             Some(v) => v.clone(),
             None => {
               return Err(create_internal_error!(format!(
-                "Undefined variable '{}' while retrieving the block name",
+                "Undefined variable '{}' during retrieving the block name",
                 key
               )))
             }

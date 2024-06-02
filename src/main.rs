@@ -129,7 +129,12 @@ fn main() {
   }
 
   if doc.conf.skip_first_line {
-    doc.source = doc.source.split("\n").skip(1).collect::<Vec<_>>().join("\n");
+    doc.source = doc
+      .source
+      .split("\n")
+      .skip(1)
+      .collect::<Vec<_>>()
+      .join("\n");
   }
 
   if let Some(err) = doc.write() {

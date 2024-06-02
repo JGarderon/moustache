@@ -1,7 +1,7 @@
 use core::slice::Iter;
+use std::fs;
 use std::iter::Peekable;
 use std::path::Path;
-use std::fs;
 
 use crate::create_internal_error;
 use crate::engine::resolver::statement::Token;
@@ -24,30 +24,30 @@ pub fn resolve_unit<'a>(
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
-      None => {
-        return Err(create_internal_error!("Statement can't be empty"))
-      }
+      None => return Err(create_internal_error!("Statement can't be empty")),
     };
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) => {
-        search_type = match &source[s..e] { // .to_lowercase()[..]
+        search_type = match &source[s..e] {
+          // .to_lowercase()[..]
           "files" => SearchType::Files,
           "directories" => SearchType::Directories,
           "all" => SearchType::All,
-          o => return Err(
-            create_internal_error!(
+          o => {
+            return Err(create_internal_error!(
               "Invalid search type found",
               format!("found '{}' search type", o)
-            )
-          ),
+            ))
+          }
         };
         break;
       }
       t => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in first part (must be Token::Symbol)", t)
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in first part (must be Token::Symbol)",
+          t
+        )));
       }
     }
   }
@@ -55,21 +55,25 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        return Err(create_internal_error!("Statement must be complete (symbol 'in' not found, premature end)"))
+        return Err(create_internal_error!(
+          "Statement must be complete (symbol 'in' not found, premature end)"
+        ))
       }
     };
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) if &source[s..e] == "in" => break,
       &Token::Symbol(s, e) if &source[s..e] != "in" => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in second part (must be Token::Symbol['in'])", &source[s..e])
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in second part (must be Token::Symbol['in'])",
+          &source[s..e]
+        )));
       }
       t => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in second part (must be Token::Symbol['in'])", t)
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in second part (must be Token::Symbol['in'])",
+          t
+        )));
       }
     }
   }
@@ -78,23 +82,23 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        return Err(create_internal_error!("Statement must be complete (text or symbol not found after 'in' symbol, premature end)"))
+        return Err(create_internal_error!(
+          "Statement must be complete (text or symbol not found after 'in' symbol, premature end)"
+        ))
       }
     };
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) => {
-        let key: String =  source[s..e].to_string();
+        let key: String = source[s..e].to_string();
         pattern = match env.get(&key) {
           Some(v) => v,
-          None => return Err(
-            create_internal_error!(
-              format!(
-                "Undefined variable '{}' as pattern",
-                key
-              )
-            )
-          )
+          None => {
+            return Err(create_internal_error!(format!(
+              "Undefined variable '{}' as pattern",
+              key
+            )))
+          }
         };
         break;
       }
@@ -103,9 +107,10 @@ pub fn resolve_unit<'a>(
         break;
       }
       t => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in third part (must be Token::Symbol['to'])", t)
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in third part (must be Token::Symbol['to'])",
+          t
+        )));
       }
     }
   }
@@ -113,30 +118,36 @@ pub fn resolve_unit<'a>(
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        return Err(create_internal_error!("Statement must be complete (symbol 'to' not found, premature end)"))
+        return Err(create_internal_error!(
+          "Statement must be complete (symbol 'to' not found, premature end)"
+        ))
       }
     };
     match token {
       Token::Space(_) => (),
       &Token::Symbol(s, e) if &source[s..e] == "to" => break,
       &Token::Symbol(s, e) if &source[s..e] != "to" => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in fourth part (must be Token::Symbol['to'])", &source[s..e])
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in fourth part (must be Token::Symbol['to'])",
+          &source[s..e]
+        )));
       }
       t => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in fourth part (must be Token::Symbol['to'])", t)
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in fourth part (must be Token::Symbol['to'])",
+          t
+        )));
       }
     }
   }
-  let destination: String; 
+  let destination: String;
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => {
-        return Err(create_internal_error!("Statement must be complete (text or symbol not found after 'to' symbol, premature end)"))
+        return Err(create_internal_error!(
+          "Statement must be complete (text or symbol not found after 'to' symbol, premature end)"
+        ))
       }
     };
     match token {
@@ -146,9 +157,10 @@ pub fn resolve_unit<'a>(
         break;
       }
       t => {
-        return Err(create_internal_error!(
-          format!("Found '{}' in final part (must be Token::Symbol)", t)
-        ));
+        return Err(create_internal_error!(format!(
+          "Found '{}' in final part (must be Token::Symbol)",
+          t
+        )));
       }
     }
   }
@@ -170,33 +182,40 @@ pub fn resolve_unit<'a>(
     env.set(destination, pattern.to_string());
   } else if path.is_dir() {
     let items = fs::read_dir(path).unwrap();
-    let mut results: Vec<String> = vec!();
+    let mut results: Vec<String> = vec![];
     for item in items {
       match item {
         Ok(directory_item) => match search_type {
-          SearchType::Files if directory_item.path().is_file() => results.push(directory_item.path().display().to_string()),
-          SearchType::Directories if directory_item.path().is_dir() => results.push(directory_item.path().display().to_string()),
+          SearchType::Files if directory_item.path().is_file() => {
+            results.push(directory_item.path().display().to_string())
+          }
+          SearchType::Directories if directory_item.path().is_dir() => {
+            results.push(directory_item.path().display().to_string())
+          }
           SearchType::All => results.push(directory_item.path().display().to_string()),
           _ => (),
+        },
+        Err(err) => {
+          return Err(create_internal_error!(
+            format!("Error during reading directory '{}'", pattern),
+            format!("Result of read_dir = '{}'", err.to_string())
+          ))
         }
-        Err(err) => return Err(create_internal_error!(
-          format!("Error during reading directory '{}'", pattern),
-          format!("Result of read_dir = '{}'", err.to_string())
-        ))
       }
     }
     match pattern.split_once('*') {
       Some((pattern_left, pattern_right)) => {
-        results.retain( |item| item.starts_with(pattern_left) );
-        results.retain( |item| item.ends_with(pattern_right) );
-      },
+        results.retain(|item| item.starts_with(pattern_left));
+        results.retain(|item| item.ends_with(pattern_right));
+      }
       None => (),
     }
     env.set(destination, results.join("\n"));
   } else {
-    return Err(create_internal_error!(
-      format!("Invalid path '{}' (not a directory or a regular file)", pattern)
-    ));
+    return Err(create_internal_error!(format!(
+      "Invalid path '{}' (not a directory or a regular file)",
+      pattern
+    )));
   }
   Ok(())
 }

@@ -1,11 +1,11 @@
 pub mod unit_block;
 pub mod unit_call;
 pub mod unit_execute;
+pub mod unit_find;
 pub mod unit_if;
 pub mod unit_include;
-pub mod unit_set;
-pub mod unit_find;
 pub mod unit_raw;
+pub mod unit_set;
 
 use crate::add_step_internal_error;
 use crate::create_internal_error;
@@ -19,11 +19,11 @@ use crate::utils::error::InternalError;
 use crate::engine::resolver::statement::unit_block::resolve_unit as resolve_statement_block;
 use crate::engine::resolver::statement::unit_call::resolve_unit as resolve_statement_call;
 use crate::engine::resolver::statement::unit_execute::resolve_unit as resolve_statement_execute;
+use crate::engine::resolver::statement::unit_find::resolve_unit as resolve_statement_find;
 use crate::engine::resolver::statement::unit_if::resolve_unit as resolve_statement_if;
 use crate::engine::resolver::statement::unit_include::resolve_unit as resolve_statement_include;
-use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
-use crate::engine::resolver::statement::unit_find::resolve_unit as resolve_statement_find;
 use crate::engine::resolver::statement::unit_raw::resolve_unit as resolve_statement_raw;
+use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
 
 #[derive(Debug)]
 pub struct Resolved {
@@ -107,7 +107,7 @@ pub fn resolve_statement<'a>(
             ))
           }
         },
-        "raw" => match resolve_statement_raw(doc, doc_position, env, source, &mut iter) {
+        "raw" => match resolve_statement_raw(doc, doc_position) {
           Ok((v, p)) => {
             output.extend(v);
             position_skip = p;

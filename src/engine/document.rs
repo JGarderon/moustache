@@ -1,13 +1,13 @@
 use std::fs;
 
 use crate::create_internal_error;
+use crate::display_debug;
+use crate::display_debug_block;
 use crate::engine::environment;
-use crate::engine::Environment;
 use crate::engine::resolver;
+use crate::engine::Environment;
 use crate::utils::conf::Configuration;
 use crate::utils::error::InternalError;
-use crate::display_debug_block;
-use crate::display_debug;
 
 #[derive(Debug)]
 pub struct Document<'c> {
@@ -209,9 +209,9 @@ impl<'c> Document<'c> {
         display_debug_block!(self.conf, "Try to write output", "Path = {:?}", path);
         match fs::write(path, &self.source) {
           Ok(_) => (),
-          Err(err) => return Some(err.to_string())
+          Err(err) => return Some(err.to_string()),
         }
-      },
+      }
       None => print!("{}", self.source),
     }
     None

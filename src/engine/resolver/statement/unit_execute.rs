@@ -85,10 +85,7 @@ fn resolve_fct<'a>(
   }
   context.fct_name = f.get(1).unwrap();
   context.args = args;
-  extensions::execute(
-    f.get(0).unwrap(),
-    context,
-  )
+  extensions::execute(f.get(0).unwrap(), context)
 }
 
 fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String> {

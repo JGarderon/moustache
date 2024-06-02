@@ -28,7 +28,7 @@ pub fn resolve_unit<'a>(
             None => return Err(
               create_internal_error!(
                 format!(
-                  "Undefined variable '{}' while defining the block name",
+                  "Undefined variable '{}' during defining the block name",
                   key
                 )
               )

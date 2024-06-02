@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::engine::document::Part;
-use crate::utils::conf::Configuration;
 use crate::engine::Document;
+use crate::utils::conf::Configuration;
 
 #[derive(Debug)]
 pub struct Environment {
@@ -48,7 +48,7 @@ impl Environment {
           Part::Comment(_, _) => (),
         }
       }
-      *block = vec!(Part::GeneratedText(destination));
+      *block = vec![Part::GeneratedText(destination)];
     }
   }
 }

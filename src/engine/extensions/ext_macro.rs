@@ -15,9 +15,9 @@ fn transform_to_text(v: &Value) -> String {
         "".to_string()
       } else {
         v.iter()
-        .map(|s| transform_to_text(s))
-        .reduce(|acc: String, next: String| acc + &next)
-        .unwrap()
+          .map(|s| transform_to_text(s))
+          .reduce(|acc: String, next: String| acc + &next)
+          .unwrap()
       }
     }
     Value::True => "true".to_string(),
@@ -34,9 +34,9 @@ fn execute_convert_to_text(context: &mut Context) -> Option<String> {
         Value::Text(t) => Value::Text(t.to_string()),
         Value::Symbol(s) => Value::Text(s.to_string()),
         v => return Some(format!("invalid token {:?}", v)),
-      } 
+      },
       _ => return Some("too much args".to_string()),
-    }
+    },
   };
   let r = transform_to_text(&v);
   context.result = Some(Value::Text(r));
@@ -52,13 +52,13 @@ fn execute_convert_to_symbol(context: &mut Context) -> Option<String> {
         Value::Text(t) => Value::Text(t.to_string()),
         Value::Symbol(s) => Value::Text(s.to_string()),
         v => return Some(format!("invalid token {:?}", v)),
-      } 
+      },
       _ => return Some("too much args".to_string()),
-    }
+    },
   };
   let r = transform_to_text(&v);
   if r.is_empty() {
-    return Some("the conversion produced an empty symbol (not allowed)".to_string())
+    return Some("the conversion produced an empty symbol (not allowed)".to_string());
   }
   context.result = Some(Value::Symbol(r));
   None
