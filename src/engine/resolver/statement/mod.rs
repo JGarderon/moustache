@@ -4,6 +4,7 @@ pub mod unit_execute;
 pub mod unit_if;
 pub mod unit_include;
 pub mod unit_set;
+pub mod unit_find;
 
 use crate::add_step_internal_error;
 use crate::create_internal_error;
@@ -20,6 +21,7 @@ use crate::engine::resolver::statement::unit_execute::resolve_unit as resolve_st
 use crate::engine::resolver::statement::unit_if::resolve_unit as resolve_statement_if;
 use crate::engine::resolver::statement::unit_include::resolve_unit as resolve_statement_include;
 use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
+use crate::engine::resolver::statement::unit_find::resolve_unit as resolve_statement_find;
 
 #[derive(Debug)]
 pub struct Resolved {
@@ -111,6 +113,17 @@ pub fn resolve_statement<'a>(
               "error in 'set' statement",
               format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
               "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+            ))
+          }
+        },
+        "find" => match resolve_statement_find(env, source, &mut iter) {
+          Ok(_) => break,
+          Err(mut err) => {
+            return Err(add_step_internal_error!(
+              err,
+              "error in 'find' statement",
+              format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
+              "must be = '\x1b[3mfind ['files' or 'directories' or 'all'] in [text or symbol] to [text or symbol]\x1b[0m'"
             ))
           }
         },
