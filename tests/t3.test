@@ -1,5 +1,8 @@
 ---separator
-$moustache -r -v myvar=very
+
+command = """ $moustache -r -v myvar=very """
+returncode = 0
+
 ---separator
 {% block "myblock" %}all is {{ myvar }} fine!{% endblock %}
 {% call "myblock" %}
@@ -16,4 +19,3 @@ all is very fine!
 all is very fine!
 no
 nothing is very better.
----separator

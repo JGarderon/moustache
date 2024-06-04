@@ -1,5 +1,8 @@
 ---separator
-$moustache -v myvar="all fine" -v my_another_var="!" 
+
+command = """ $moustache -v myvar="all fine" -v my_another_var="!" """
+returncode = 0
+
 ---separator
 {{ myvar }}
 {{myvar}}
@@ -26,4 +29,3 @@ all fine!
 all fine!
 all fine!
 all fine!!
----separator

@@ -1,0 +1,27 @@
+---separator
+
+command = """ $moustache 2>&1 || exit 0 """
+returncode = 0
+no_compare_stdout = true
+
+---separator
+{{ undefined_var }}
+---separator
+
+-- ERROR FOUND
+
+[0] >> Error during resolving
+       v1.1.0/src/main.rs#120)
+
+[1] >> Error in expression
+       v1.1.0/src/engine/resolver/mod.rs#33)
+       real position of expression in document = 0 -> 19
+       target expression (here with trim !) = 'undefined_var'
+       must be in the following form = '{{ text or symbol (+ text or symbol (+ ...)) }}'
+
+[2] >> Undefined variable 'undefined_var' in environment
+       v1.1.0/src/engine/resolver/expression/mod.rs#68)
+
+--
+
+
