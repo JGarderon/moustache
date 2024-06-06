@@ -22,17 +22,19 @@ def process_test(exec_path, s_conf, s_in, s_out):
   completed_process = subprocess_run(
     command, 
     shell=True,
-    input=s_in,
+    input=s_in.strip(),
     capture_output=True,
     text=True
   )
   if completed_process.returncode != returncode:
     raise Exception(f'invalid return code (desired: {returncode}; found: {completed_process.returncode})') 
   stdout = re_sub(REGEX_CONTROL_CHARS, '', completed_process.stdout.strip())
-  if 'no_compare_stdout' in conf:
-    if conf['no_compare_stdout'] is not True: 
-      if stdout != s_out.strip():
-        raise Exception('invalid stdout from process') 
+  print(stdout)
+  if 'compare_stdout' in conf:
+    if conf['compare_stdout'] is False: 
+      return 
+  if stdout != s_out.strip():
+    raise Exception('invalid stdout from process') 
 
 def get_parts(path):
   parts = []
@@ -54,7 +56,7 @@ def process(args):
   KO = 0
   tests_paths = Path(args.tests_path).glob(args.tests_pattern) 
   for i, test_path in enumerate(tests_paths):
-    logging.info(f'Test n°{i} - Process of "{test_path}"... ')
+    logging.debug(f'Test n°{i} - Process of "{test_path}"... ')
     parts = get_parts(test_path)
     s_conf, s_in, s_out, *s_others = parts
     if len(s_others)>0:

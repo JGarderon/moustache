@@ -4,6 +4,7 @@ command = """ $moustache -r -v myvar=very """
 returncode = 0
 
 ---separator
+
 {% block "myblock" %}all is {{ myvar }} fine!{% endblock %}
 {% call "myblock" %}
 {% call "myblock" %}
@@ -14,7 +15,9 @@ returncode = 0
 {% if myvar == "very" %}
 {% call name_of_block %}
 {% endif %}
+
 ---separator
+
 all is very fine!
 all is very fine!
 no

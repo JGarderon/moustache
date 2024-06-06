@@ -4,6 +4,7 @@ command = """ $moustache -v myvar="all fine" -v my_another_var="!" """
 returncode = 0
 
 ---separator
+
 {{ myvar }}
 {{myvar}}
 {{ myvar}}
@@ -16,7 +17,9 @@ returncode = 0
 {{ myvar+my_another_var}}
 {{myvar+my_another_var }}
 {{ myvar + my_another_var + my_another_var }}
+
 ---separator
+
 all fine
 all fine
 all fine

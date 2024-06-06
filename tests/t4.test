@@ -2,10 +2,11 @@
 
 command = """ $moustache 2>&1 || exit 0 """
 returncode = 0
-no_compare_stdout = true
 
 ---separator
+
 {{ undefined_var }}
+
 ---separator
 
 -- ERROR FOUND
