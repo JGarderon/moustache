@@ -104,16 +104,16 @@ A vous de voir !
 ### Délimiteur `{% ... %}` (déclaration)
 
 C'est là où la magie opère. Une déclaration dans Moustache peut être unitaire (unique) ou bordée (double : un début et une fin). On en trouve :
-  - déclaration unitaire
+  - _déclaration "unitaire"_
     - `set` : créer ou définir une variable
     - `call` : appeler un bloc de texte à cet emplacement
     - `find` : trouver des fichiers, des dossiers (ou les deux) selon un gabarit
     - `include` : inclure un fichier à cet emplacement
     - `execute` : exécuter une extension (si la compilation l'embarque et que l'exécution l'a autorisée)
-  - déclarations bordées
+  - _déclarations "bordées"_
     - `if` (`endif`) : conditionne le texte contenu
     - `block` (`endblock`) : définit le texte contenu comme un bloc invoquable
-    - `raw` (`endraw`) : n'exécute pas dans le traitement ce qui est dans le texte contenu
+    - `raw` (`endraw`) : n'exécute pas ce qui est dans le texte contenu
     - `for` (`endfor`) : boucle sur une "liste" (un item par ligne dans une chaîne de caractères) 
 
 ... Chacun a sa propre logique et une grammaire semblable.
@@ -189,7 +189,7 @@ __Exemples :__
 #### Déclaration de recherche dans un dossier (`find`)
 
 __Grammaire locale :__
-  `{% find ['all' or 'files' or 'directories'] in [text or symbol] to [text or symbol] %}`
+  `{% find ['all' or 'files' or 'directories'] in [text or symbol] to [text or symbol] (! [text or symbol]) %}`
 
 __Notes :__
   - Il n'y a pas de protection spécifique sur les chemins lus (c'est-à-la charge du processus parent de créer la prison nécessaire). Les liens symboliques sont résolus.
@@ -197,6 +197,7 @@ __Notes :__
   - Le gabarit de recherche peut contenir `*` pour simuler la présence de 0 à n caractères.
   - Il n'y a pas de récurcivité dans le dossier parcouru.
   - La variable contient les résultats avec le caractère `\n` entre chaque item.
+  - Après le séparateur des options `!`, il est possible d'indiquer un texte ou une variable qui soit le charactère de regroupement. 
 
 __Exemples :__
   - Recherche des dossiers :
@@ -210,6 +211,10 @@ __Exemples :__
   - Recherche de tous les éléments :
     ```
     {% find all in "/var/log" to journaux %}
+    ```
+  - Recherche de tous les éléments et jointure avec ";" :
+    ```
+    {% find all in "." to csv_line ! ";" %}
     ```
 
 #### Déclaration d'inclusion de contenu (`include`)
@@ -248,6 +253,41 @@ __Notes :__
 
 __Documentations disponibles via le code compilé de Moustache :__
   `moustache --help-extensions`
+
+#### Déclaration de conditionalité (`if`)
+
+__Grammaire locale :__
+  `{% if [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... ) %}`
+
+__Notes :__
+  - Cette déclaration n'est pas imbriquable dans elle-même (pas de `if` directement dans un autre).
+
+__Exemples :__
+  - Condition simple :
+    ```
+    {% if mavar == "1" %}
+
+    {% endif %}
+    ```
+  - Condition complexe : 
+    ```
+    {% if mavar == "1" && (oui_ou_non == "oui" || oui_ou_non == "non") %}
+
+    {% endif %}
+    ```
+  - La logique n'est pas contrôlé, ceci ne sera jamais une condition retournant 'vrai' :
+    ```
+    {% if mavar == "1" && mavar == "2" %}
+
+    {% endif %}
+    ```
+
+
+
+
+
+
+
 
 ## L'auteur 
 

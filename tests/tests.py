@@ -26,10 +26,10 @@ def process_test(exec_path, s_conf, s_in, s_out):
     capture_output=True,
     text=True
   )
+  logging.debug(completed_process.stdout.strip())
   if completed_process.returncode != returncode:
     raise Exception(f'invalid return code (desired: {returncode}; found: {completed_process.returncode})') 
   stdout = re_sub(REGEX_CONTROL_CHARS, '', completed_process.stdout.strip())
-  print(stdout)
   if 'compare_stdout' in conf:
     if conf['compare_stdout'] is False: 
       return 

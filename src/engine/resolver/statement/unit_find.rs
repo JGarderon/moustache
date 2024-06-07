@@ -164,6 +164,59 @@ pub fn resolve_unit<'a>(
       }
     }
   }
+  let mut begining: bool = true;
+  let mut optional_part: bool = false;
+  loop {
+    let token = match iter_tokens.next() {
+      Some(t) => t,
+      None => break,
+    };
+    begining = false;
+    match token {
+      Token::Space(_) => (),
+      Token::Exclamation => {
+        optional_part = true;
+        break;
+      }
+      t => {
+        return Err(create_internal_error!(format!(
+          "Found '{}' as optional part separator (must be Token::Exclamation)",
+          t
+        )));
+      }
+    }
+  }
+  let mut join_char: &str = "\n";
+  if optional_part {
+    join_char = loop {
+      let token = match iter_tokens.next() {
+        Some(t) => t,
+        None => return Err(create_internal_error!("Optional part can't be empty")),
+      };
+      match token {
+        Token::Space(_) => (),
+        &Token::Symbol(s, e) => {
+          let key = source[s..e].to_string();
+          match env.get(&key) {
+            Some(v) => break v,
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}' as join char",
+                key
+              )))
+            }
+          }
+        }
+        &Token::Text(s, e) => break &source[s..e],
+        t => {
+          return Err(create_internal_error!(format!(
+            "Found '{}' in first part (must be Token::Symbol or Token::Text)",
+            t
+          )));
+        }
+      }
+    };
+  }
   if pattern == "" {
     return Err(create_internal_error!(
       "Invalid empty path: for the local directory, please set value as '.'"
@@ -210,7 +263,7 @@ pub fn resolve_unit<'a>(
       }
       None => (),
     }
-    env.set(destination, results.join("\n"));
+    env.set(destination, results.join(join_char));
   } else {
     return Err(create_internal_error!(format!(
       "Invalid path '{}' (not a directory or a regular file)",

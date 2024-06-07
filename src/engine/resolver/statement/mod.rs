@@ -155,7 +155,7 @@ pub fn resolve_statement<'a>(
               err,
               "error in 'find' statement",
               format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
-              "must be = '\x1b[3mfind ['files' or 'directories' or 'all'] in [text or symbol] to [text or symbol]\x1b[0m'"
+              "must be = '\x1b[3mfind ['files' or 'directories' or 'all'] in [text or symbol] to [text or symbol] (! [text or symbol])\x1b[0m'"
             ))
           }
         },
