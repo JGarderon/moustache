@@ -1,8 +1,11 @@
-#[cfg(feature = "engine-extensions")]
-pub mod ext_default;
+// #[cfg(feature = "engine-extensions")]
+// pub mod ext__default;
 
 #[cfg(feature = "engine-extensions")]
 pub mod ext_macro;
+
+#[cfg(feature = "engine-extensions")]
+pub mod ext_text;
 
 use crate::engine::Document;
 use crate::engine::Environment;
@@ -102,14 +105,16 @@ impl HelperFunction {
 
 #[cfg(feature = "engine-extensions")]
 mod optional_feature {
-  use crate::engine::extensions::ext_default;
+  // use crate::engine::extensions::ext__default;
   use crate::engine::extensions::ext_macro;
+  use crate::engine::extensions::ext_text;
   use crate::engine::extensions::Context;
 
   pub fn execute<'a>(module: &str, context: &mut Context) -> Option<String> {
     match module {
-      m if m == ext_default::MODULE_NAME => ext_default::execute(context),
+      // m if m == ext__default::MODULE_NAME => ext_default::execute(context),
       m if m == ext_macro::MODULE_NAME => ext_macro::execute(context),
+      m if m == ext_text::MODULE_NAME => ext_text::execute(context),
       m => Some(format!(
         "Extension '{}' not found (--help-extensions argument may assist you)",
         m
@@ -117,8 +122,9 @@ mod optional_feature {
     }
   }
   pub fn help() {
-    ext_default::help().display();
+    // ext__default::help().display();
     ext_macro::help().display();
+    ext_text::help().display();
   }
 }
 

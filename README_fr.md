@@ -325,11 +325,11 @@ DEBUG=1 ./install.sh
 ### Lancer une compilation et la chaîne de tests en mode débogue 
 
 ```bash
-cargo build --release && DEBUG=1 ./tests/tests.sh "target/release/moustachet" "./tests/*.test"
+cargo build --release && DEBUG=1 ./tests/tests.sh "target/release/moustache" "./tests/*.test"
 ```
 
 ### Lancer Valgrind pour la recherche de bogues 
 
 ```bash
-valgrind -s --track-origins=yes --leak-check=full target/release/moustache -v "...=..." --output "..." --input "..." -r
+valgrind -s --track-origins=yes --leak-check=full "target/release/moustache" -v "...=..." --output "..." --input "..." -r
 ```
