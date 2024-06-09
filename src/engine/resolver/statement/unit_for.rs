@@ -113,8 +113,59 @@ pub fn resolve_unit<'a>(
       }
     }
   };
+  let mut optional_part: bool = false;
+  loop {
+    let token = match iter_tokens.next() {
+      Some(t) => t,
+      None => break,
+    };
+    match token {
+      Token::Space(_) => (),
+      Token::Exclamation => {
+        optional_part = true;
+        break;
+      }
+      t => {
+        return Err(create_internal_error!(format!(
+          "Found '{}' as optional part separator (must be Token::Exclamation)",
+          t
+        )));
+      }
+    }
+  }
+  let mut split_char: &str = "\n";
+  if optional_part {
+    split_char = loop {
+      let token = match iter_tokens.next() {
+        Some(t) => t,
+        None => return Err(create_internal_error!("Optional part can't be empty")),
+      };
+      match token {
+        Token::Space(_) => (),
+        &Token::Symbol(s, e) => {
+          let key = source[s..e].to_string();
+          match env.get(&key) {
+            Some(v) => break v,
+            None => {
+              return Err(create_internal_error!(format!(
+                "Undefined variable '{}' as split char",
+                key
+              )))
+            }
+          }
+        }
+        &Token::Text(s, e) => break &source[s..e],
+        t => {
+          return Err(create_internal_error!(format!(
+            "Found '{}' in first part (must be Token::Symbol or Token::Text)",
+            t
+          )));
+        }
+      }
+    };
+  }
   let mut results: Vec<Part> = vec!();
-  for item in list.split("\n") {
+  for item in list.split(split_char) {
     let mut result: Vec<Part> = vec!(
       Part::GeneratedText(
         format!("{{% set {} = \"{}\" %}}", destination, item.replace("\"", "\\\""))

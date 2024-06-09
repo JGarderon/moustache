@@ -164,14 +164,12 @@ pub fn resolve_unit<'a>(
       }
     }
   }
-  let mut begining: bool = true;
   let mut optional_part: bool = false;
   loop {
     let token = match iter_tokens.next() {
       Some(t) => t,
       None => break,
     };
-    begining = false;
     match token {
       Token::Space(_) => (),
       Token::Exclamation => {

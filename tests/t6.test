@@ -7,10 +7,18 @@ returncode = 0
 
 --- --- ---
 {% set chemin = "./tests/*.test" %}
-{% find all in chemin to all_items ! ";" %}
+{% find all in chemin to all_items %}
 all_items = {{ all_items }}
 ---
 {% for file_or_directory in all_items %}__ {{ file_or_directory }} __
+{% endfor %}
+
+--- --- ---
+{% set chemin = "./tests/*.test" %}
+{% find all in chemin to all_items ! ";" %}
+all_items = {{ all_items }}
+---
+{% for file_or_directory in all_items ! ";" %}__ {{ file_or_directory }} __
 {% endfor %}
 
 --- --- ---
@@ -24,13 +32,35 @@ all_items = {{ all_items }}
 {% endfor %}
 
 ---separator
+--- --- ---
+
+
+all_items = ./tests/t2.test
+./tests/t4.test
+./tests/t1.test
+./tests/t6.test
+./tests/t5.test
+./tests/t3.test
+---
+{% set file_or_directory = "./tests/t2.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t4.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t1.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t6.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t5.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t3.test" %}__ {{ file_or_directory }} __
+
 
 --- --- ---
 
 
 all_items = ./tests/t2.test;./tests/t4.test;./tests/t1.test;./tests/t6.test;./tests/t5.test;./tests/t3.test
 ---
-{% set file_or_directory = "./tests/t2.test;./tests/t4.test;./tests/t1.test;./tests/t6.test;./tests/t5.test;./tests/t3.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t2.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t4.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t1.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t6.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t5.test" %}__ {{ file_or_directory }} __
+{% set file_or_directory = "./tests/t3.test" %}__ {{ file_or_directory }} __
 
 
 --- --- ---
@@ -50,4 +80,3 @@ all_items = ./tests/t2.test
 {% set file_or_directory = "./tests/t6.test" %}__ {{ file_or_directory }} __
 {% set file_or_directory = "./tests/t5.test" %}__ {{ file_or_directory }} __
 {% set file_or_directory = "./tests/t3.test" %}__ {{ file_or_directory }} __
-
