@@ -441,13 +441,14 @@ fn resolve_exp<'a>(
         if *first_is_symbol {
           let key: String = source[*first_start..*first_end].to_string();
           match env.get(&key) {
-            Some(v) => first = v.to_string(),
-            None => {
+            Ok(Some(v)) => first = v.to_string(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' in condition",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         } else {
           first = source[*first_start..*first_end].to_string();
@@ -456,13 +457,14 @@ fn resolve_exp<'a>(
         if *second_is_symbol {
           let key: String = source[*second_start..*second_end].to_string();
           match env.get(&key) {
-            Some(v) => second = v.to_string(),
-            None => {
+            Ok(Some(v)) => second = v.to_string(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' in condition",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         } else {
           second = source[*second_start..*second_end].to_string();

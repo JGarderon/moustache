@@ -92,13 +92,14 @@ fn cast(env: &mut Environment, results: Option<Value>) -> Result<String, String>
   match results {
     Some(Value::Text(v)) => return Ok(v.to_string()),
     Some(Value::Symbol(v)) => match env.get(&v) {
-      Some(r) => return Ok(r.to_string()),
-      None => {
+      Ok(Some(r)) => return Ok(r.to_string()),
+      Ok(None) => {
         return Err(format!(
           "Error during casting with unfound environment key '{}'",
           v
         ))
       }
+      Err(err) => return Err(format!("Error during casting with this error : {}", err)),
     },
     Some(Value::Vector(vector)) => {
       let mut iter = vector.into_iter().rev();
@@ -227,6 +228,8 @@ pub fn resolve_unit<'a>(
       ));
     }
   };
-  env.set(key, value);
-  Ok(())
+  match env.set(key, value) {
+    Some(err) => Err(create_internal_error!(err)),
+    None => Ok(()),
+  }
 }

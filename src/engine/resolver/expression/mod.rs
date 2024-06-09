@@ -63,13 +63,26 @@ pub fn resolve_expression<'a>(
       parser::Token::Symbol(s, e) if is_begining => {
         let symbol = source[*s..*e].to_string();
         match env.get(&symbol) {
-          Some(v) => output.push_str(v),
-          None => {
-            return Err(create_internal_error!(format!(
-              "Undefined variable '{}' in environment",
+          Ok(Some(v)) => output.push_str(v),
+          Ok(None) => match env.get_real_key(&symbol) {
+            Some((true, real_key)) => return Err(create_internal_error!(format!(
+              "Undefined indirection variable '{}' in environment (original : '{}')",
+              real_key,
+              symbol
+            ))),
+            Some((false, real_key)) => return Err(create_internal_error!(format!(
+              "Undefined variable '{}' in environment (no indirection)",
+              real_key
+            ))),
+            None => return Err(create_internal_error!(format!(
+              "Undefined indirection variable '{}' in environment (original value)",
               symbol
             )))
           }
+          Err(err) => return Err(create_internal_error!(
+            "Error during getting variable",
+            err
+          )),
         }
         is_begining = false;
       }
@@ -84,16 +97,17 @@ pub fn resolve_expression<'a>(
             Some(parser::Token::Symbol(s, e)) => {
               let symbol = &source[*s..*e].to_string();
               match env.get(&symbol) {
-                Some(v) => add_string_to_another(
+                Ok(Some(v)) => add_string_to_another(
                   &mut v[..].to_string(), // pas terrible...
                   &mut output,
                 ),
-                None => {
+                Ok(None) => {
                   return Err(create_internal_error!(format!(
                     "Undefined variable '{}' in environment",
                     symbol
                   )))
-                }
+                },
+                Err(err) => return Err(create_internal_error!(err)),
               }
               is_begining = false;
               break;

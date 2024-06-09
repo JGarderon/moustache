@@ -77,13 +77,14 @@ pub fn resolve_unit<'a>(
         key = source[s..e].to_string();
         if operator == false {
           match env.get(&key) {
-            Some(v) => value.push(v.clone()),
-            None => {
+            Ok(Some(v)) => value.push(v.clone()),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' (position {} ~> {})",
                 key, s, e
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
           operator = true;
         } else {
@@ -203,8 +204,9 @@ pub fn resolve_unit<'a>(
   }
   let setting: bool = if if_part {
     let exists = match env.get(&key) {
-      Some(_) => true,
-      None => false,
+      Ok(Some(_)) => true,
+      Ok(None) => false,
+      Err(err) => return Err(create_internal_error!(err)),
     };
     if empty {
       if exists {
@@ -223,7 +225,10 @@ pub fn resolve_unit<'a>(
     true
   };
   if setting {
-    env.set(key, value.into_iter().collect::<String>());
+    match env.set(key, value.into_iter().collect::<String>()) {
+      Some(err) => return Err(create_internal_error!(err)),
+      None => (),
+    }
   }
   Ok(())
 }

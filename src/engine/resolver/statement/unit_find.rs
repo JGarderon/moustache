@@ -92,13 +92,14 @@ pub fn resolve_unit<'a>(
       &Token::Symbol(s, e) => {
         let key: String = source[s..e].to_string();
         pattern = match env.get(&key) {
-          Some(v) => v,
-          None => {
+          Ok(Some(v)) => v,
+          Ok(None) => {
             return Err(create_internal_error!(format!(
               "Undefined variable '{}' as pattern",
               key
             )))
           }
+          Err(err) => return Err(create_internal_error!(err)),
         };
         break;
       }
@@ -196,13 +197,14 @@ pub fn resolve_unit<'a>(
         &Token::Symbol(s, e) => {
           let key = source[s..e].to_string();
           match env.get(&key) {
-            Some(v) => break v,
-            None => {
+            Ok(Some(v)) => break v,
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' as join char",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         }
         &Token::Text(s, e) => break &source[s..e],
@@ -230,7 +232,10 @@ pub fn resolve_unit<'a>(
     Path::new(pattern)
   };
   if path.is_file() {
-    env.set(destination, pattern.to_string());
+    match env.set(destination, pattern.to_string()) {
+      Some(err) => return Err(create_internal_error!(err)),
+      None => (),
+    }
   } else if path.is_dir() {
     let items = fs::read_dir(path).unwrap();
     let mut results: Vec<String> = vec![];
@@ -261,7 +266,10 @@ pub fn resolve_unit<'a>(
       }
       None => (),
     }
-    env.set(destination, results.join(join_char));
+    match env.set(destination, results.join(join_char)) {
+      Some(err) => return Err(create_internal_error!(err)),
+      None => (),
+    }
   } else {
     return Err(create_internal_error!(format!(
       "Invalid path '{}' (not a directory or a regular file)",

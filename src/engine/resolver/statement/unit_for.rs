@@ -23,12 +23,12 @@ pub fn resolve_unit<'a>(
         block_ending_position = position;
         part
       }
-      None => return Err(
-        create_internal_error!(
+      None => {
+        return Err(create_internal_error!(
           "Unfinished block",
           "must be = '\x1b[3mfor [symbol] in [symbol or text]\x1b[0m'"
-        )
-      ),
+        ))
+      }
     };
     match part {
       &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endfor" => break,
@@ -95,13 +95,14 @@ pub fn resolve_unit<'a>(
       &Token::Symbol(s, e) => {
         let key: String = source[s..e].to_string();
         match env.get(&key) {
-          Some(v) => break v.to_string(),
-          None => {
+          Ok(Some(v)) => break v.to_string(),
+          Ok(None) => {
             return Err(create_internal_error!(format!(
               "Undefined variable '{}' as pattern",
               key
             )))
           }
+          Err(err) => return Err(create_internal_error!(err)),
         };
       }
       &Token::Text(s, e) => break (&source[s..e]).to_string(),
@@ -145,13 +146,14 @@ pub fn resolve_unit<'a>(
         &Token::Symbol(s, e) => {
           let key = source[s..e].to_string();
           match env.get(&key) {
-            Some(v) => break v,
-            None => {
+            Ok(Some(v)) => break v,
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' as split char",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         }
         &Token::Text(s, e) => break &source[s..e],
@@ -164,18 +166,15 @@ pub fn resolve_unit<'a>(
       }
     };
   }
-  let mut results: Vec<Part> = vec!();
+  let mut results: Vec<Part> = vec![];
   for item in list.split(split_char) {
-    let mut result: Vec<Part> = vec!(
-      Part::GeneratedText(
-        format!("{{% set {} = \"{}\" %}}", destination, item.replace("\"", "\\\""))
-      )
-    );
+    let mut result: Vec<Part> = vec![Part::GeneratedText(format!(
+      "{{% set {} = \"{}\" %}}",
+      destination,
+      item.replace("\"", "\\\"")
+    ))];
     result.extend(doc.stack[doc_position + 1..doc_position + block_ending_position].to_vec());
     results.extend(result);
   }
-  Ok((
-    results,
-    block_ending_position,
-  ))
+  Ok((results, block_ending_position))
 }

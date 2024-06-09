@@ -66,9 +66,17 @@ Ce sont ces délimiteurs qui permettent, dans n'importe quel format source, de s
 
 Contrairement aux expressions ou aux commentaires, les déclarations ont plusieurs formats en fonction de leur usage. Généralement, elles entourent un bloc de texte qui peut lui-aussi contenir des délimiteurs.
 
-A chaque fois qu'une variable est trouvée dans le contenu d'un délimileur, elle est remplacée par sa valeur textuelle.
+A chaque fois qu'une variable est trouvée dans le contenu d'un délimileur, elle est remplacée par sa valeur textuelle. Il est également possible de réaliser une indirection, comme [en Bash](aral.iut-rodez.fr/fr/sanchis/enseignement/bash/ch02s06-Indirection.html). C'est-à-dire que la clé réelle utilisée pour la récupération de valeur, est elle-même sous la forme d'une variable. Cette opération, avancée, permet d'utiliser des variables 'génériques', par exemple : 
+```
+{{ "textes." + $langue }}
+```
+... avec un environnement qui contient deux valeurs : 
+  - "$langue" qui renvoie la valeur "langue_locale",
+  - "langue_locale" qui renvoie la valeur "fr"... 
 
-Ainsi à chaque fois que Moustache prendre du contenu en entrée, si on l'autorise (via l'argument `-r`), il pourra le traiter en fonction des déclarations et expressions trouvés, puis remettre sur son entrée le contenu de sortie. S'il n'y a plusieurs rien à faire ou si l'on souhaite un seul traitement, la sortie est retournée. Cette notion de traitement peut être vue comme des étapes (`Step`) pour amener à la génération finale.
+... C'est donc "fr" qui sera effectivement utilisé dans l'expression. Ce fonctionnement utilise le symbole `$` en début de valeur et est très utile pour rajouter une variabilité supplémentaire à des fichiers sources. 
+
+Plus loin dans les concepts, à chaque fois que Moustache prendre du contenu en entrée, si on l'autorise (via l'argument `-r`), il pourra le traiter en fonction des déclarations et expressions trouvés, puis remettre sur son entrée le contenu de sortie. S'il n'y a plusieurs rien à faire ou si l'on souhaite un seul traitement, la sortie est retournée. Cette notion de traitement peut être vue comme des étapes (`Step`) pour amener à la génération finale.
 
 C'est en jonglant avec les délimiteurs et ce processus de traitements possiblement multiples, que l'on peut aboutir à des choses qui peuvent être très complexes.
 

@@ -2,11 +2,11 @@ pub mod unit_block;
 pub mod unit_call;
 pub mod unit_execute;
 pub mod unit_find;
+pub mod unit_for;
 pub mod unit_if;
 pub mod unit_include;
 pub mod unit_raw;
 pub mod unit_set;
-pub mod unit_for;
 
 use crate::add_step_internal_error;
 use crate::create_internal_error;
@@ -21,11 +21,11 @@ use crate::engine::resolver::statement::unit_block::resolve_unit as resolve_stat
 use crate::engine::resolver::statement::unit_call::resolve_unit as resolve_statement_call;
 use crate::engine::resolver::statement::unit_execute::resolve_unit as resolve_statement_execute;
 use crate::engine::resolver::statement::unit_find::resolve_unit as resolve_statement_find;
+use crate::engine::resolver::statement::unit_for::resolve_unit as resolve_statement_for;
 use crate::engine::resolver::statement::unit_if::resolve_unit as resolve_statement_if;
 use crate::engine::resolver::statement::unit_include::resolve_unit as resolve_statement_include;
 use crate::engine::resolver::statement::unit_raw::resolve_unit as resolve_statement_raw;
 use crate::engine::resolver::statement::unit_set::resolve_unit as resolve_statement_set;
-use crate::engine::resolver::statement::unit_for::resolve_unit as resolve_statement_for;
 
 #[derive(Debug)]
 pub struct Resolved {
@@ -63,7 +63,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'define block' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -78,7 +78,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'call block' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -91,7 +91,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'include' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -105,7 +105,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'if' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -119,7 +119,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'for' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -133,7 +133,7 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'raw' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+              format!("source = '{}'", source.trim())
             ))
           }
         },
@@ -143,8 +143,8 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'set' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
-              "must be = '\x1b[3mset [symbol] = [text or symbol (+ text or symbol (+ ...))]\x1b[0m'"
+              format!("source = '{}'", source.trim()),
+              "must be = 'set [symbol] = [text or symbol (+ text or symbol (+ ...))]'"
             ))
           }
         },
@@ -154,8 +154,8 @@ pub fn resolve_statement<'a>(
             return Err(add_step_internal_error!(
               err,
               "error in 'find' statement",
-              format!("source = '\x1b[3m{}\x1b[0m'", source.trim()),
-              "must be = '\x1b[3mfind ['files' or 'directories' or 'all'] in [text or symbol] to [text or symbol] (! [text or symbol])\x1b[0m'"
+              format!("source = '{}'", source.trim()),
+              "must be = 'find ['files' or 'directories' or 'all'] in [text or symbol] to [text or symbol] (! [text or symbol])'"
             ))
           }
         },
@@ -171,7 +171,7 @@ pub fn resolve_statement<'a>(
         s => {
           return Err(create_internal_error!(
             format!("invalid action '{}' in statement", s),
-            format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+            format!("source = '{}'", source.trim())
           ))
         }
       },
@@ -179,7 +179,7 @@ pub fn resolve_statement<'a>(
       t => {
         return Err(create_internal_error!(
           format!("token {} not authorized in statement", t),
-          format!("source = '\x1b[3m{}\x1b[0m'", source.trim())
+          format!("source = '{}'", source.trim())
         ))
       }
     }

@@ -24,11 +24,36 @@ impl Environment {
       blocks: HashMap::new(),
     }
   }
-  pub fn set(&mut self, key: String, value: String) {
-    self.stack.insert(key, value);
+  pub fn set(&mut self, key: String, value: String) -> Option<String> {
+    if key.starts_with("$") {
+      match self.stack.get(&key) {
+        Some(real_key) => self.stack.insert(real_key.to_string(), value),
+        None => return Some(format!("invalid indirection key ('{}' not found)", key)),
+      };
+    } else {
+      self.stack.insert(key, value);
+    }
+    None
   }
-  pub fn get(&self, key: &String) -> Option<&String> {
-    self.stack.get(key)
+  pub fn get(&self, key: &String) -> Result<Option<&String>, String> {
+    if key.starts_with("$") {
+      match self.stack.get(key) {
+        Some(real_key) => Ok(self.stack.get(real_key)),
+        None => return Err(format!("invalid indirection key ('{}' not found)", key)),
+      }
+    } else {
+      Ok(self.stack.get(key))
+    }
+  }
+  pub fn get_real_key(&self, key: &String) -> Option<(bool, String)> {
+    if key.starts_with("$") {
+      match self.stack.get(key) {
+        Some(real_key) => Some((true, real_key.to_string())),
+        None => None,
+      }
+    } else {
+      Some((false, key.to_string()))
+    }
   }
   pub fn set_block(&mut self, key: String, value: Vec<Part>) {
     self.blocks.insert(key, value);
