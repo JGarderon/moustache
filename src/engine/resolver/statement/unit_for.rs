@@ -17,6 +17,7 @@ pub fn resolve_unit<'a>(
 ) -> Result<(Vec<Part>, usize), InternalError> {
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
+  let mut i = 0;
   loop {
     let part = match iter_parts.next() {
       Some((position, part)) => {
@@ -31,7 +32,13 @@ pub fn resolve_unit<'a>(
       }
     };
     match part {
-      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endfor" => break,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("for") => i += 1,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endfor" => {
+        i -= 1;
+        if i == 0 {
+          break;
+        }
+      }
       _ => (),
     }
   }
