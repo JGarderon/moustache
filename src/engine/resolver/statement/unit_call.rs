@@ -20,13 +20,14 @@ pub fn resolve_unit<'a>(
         &Token::Symbol(s, e) => {
           let key = source[s..e].to_string();
           block_name = match env.get(&key) {
-            Some(v) => v.clone(),
-            None => {
+            Ok(Some(v)) => v.clone(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
-                "Undefined variable '{}' while retrieving the block name",
+                "Undefined variable '{}' during retrieving the block name",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           };
           break;
         }

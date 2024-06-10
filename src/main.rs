@@ -128,21 +128,22 @@ fn main() {
     reentrance += 1;
   }
 
-  match &doc.conf.output {
-    Some(path) => match doc.write(&path[..]) {
-      Some(err) => {
-        create_internal_error!(
-          "Error during write output",
-          format!("Error details = {}", err)
-        )
-        .display(conf.error_formatting);
-        std::process::exit(1);
-      }
-      None => {
-        let _ = display_debug_block!(conf, "Write output", "Path = {:?}", path);
-      }
-    },
-    None => print!("{}", doc.source),
+  if doc.conf.skip_first_line {
+    doc.source = doc
+      .source
+      .split("\n")
+      .skip(1)
+      .collect::<Vec<_>>()
+      .join("\n");
+  }
+
+  if let Some(err) = doc.write() {
+    create_internal_error!(
+      "Error during write output",
+      format!("Error details = {}", err)
+    )
+    .display(conf.error_formatting);
+    std::process::exit(1);
   }
 
   display_debug_title!(conf, "End of program, no errors");

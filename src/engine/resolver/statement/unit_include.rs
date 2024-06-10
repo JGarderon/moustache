@@ -26,13 +26,14 @@ pub fn resolve_unit<'a>(
         &Token::Symbol(s, e) => {
           let value = source[s..e].to_string();
           include_path = match env.get(&value) {
-            Some(v) => v.clone(),
-            None => {
+            Ok(Some(v)) => v.clone(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}'",
                 value
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           };
           break;
         }
