@@ -26,7 +26,12 @@ else
 fi
 
 echo "--> TESTS step"
-./tests/tests.sh "target/$ARCHI/release/moustache" "./tests/*.test"
+if type python3 &>/dev/null; then
+	./tests/tests.py --tests-path ./tests --exec-path "target/$ARCHI/release/moustache" -vvv
+else
+	echo "The Python3.8+ program must be installed on your system for functional tests."
+fi
+
 if [ $? != 0 ]
 then
 	exit 1

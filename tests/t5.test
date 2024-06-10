@@ -1,0 +1,29 @@
+---separator
+
+command = """ $moustache """
+returncode = 0
+
+---separator
+
+{% raw %}
+{{ myvar }}
+{% endraw %}
+
+{% raw %}
+{% raw %}
+{{ myvar }}
+{% endraw %}
+{% endraw %}
+
+---separator
+
+{{ myvar }}
+
+
+
+{% raw %}
+{{ myvar }}
+{% endraw %}
+
+
+

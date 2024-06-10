@@ -33,8 +33,8 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
             add_step_internal_error!(
               err,
               "Error in expression",
-              format!("must be in the following form = '\x1b[3m{{{{ text or symbol (+ text or symbol (+ ...)) }}}}\x1b[0m'"),
-              format!("target expression (here with trim !) = '\x1b[3m{}\x1b[0m'", &doc.source[s+2..e-2].trim()),
+              format!("must be in the following form = '{{{{ text or symbol (+ text or symbol (+ ...)) }}}}'"),
+              format!("target expression (here with trim !) = '{}'", &doc.source[s+2..e-2].trim()),
               format!("real position of expression in document = {} -> {}", s, e)
             )
           ),
@@ -55,7 +55,7 @@ pub fn resolve<'a>(doc: &'a Document, env: &mut Environment) -> Result<Resolved,
               "Error in statement",
               format!("each statement has a different grammar"),
               format!(
-                "target expression (here with trim !) = '\x1b[3m{}\x1b[0m'",
+                "target expression (here with trim !) = '{}'",
                 &doc.source[s + 2..e - 2].trim()
               ),
               format!("real position of expression in document = {} -> {}", s, e)

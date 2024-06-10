@@ -441,13 +441,14 @@ fn resolve_exp<'a>(
         if *first_is_symbol {
           let key: String = source[*first_start..*first_end].to_string();
           match env.get(&key) {
-            Some(v) => first = v.to_string(),
-            None => {
+            Ok(Some(v)) => first = v.to_string(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' in condition",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         } else {
           first = source[*first_start..*first_end].to_string();
@@ -456,13 +457,14 @@ fn resolve_exp<'a>(
         if *second_is_symbol {
           let key: String = source[*second_start..*second_end].to_string();
           match env.get(&key) {
-            Some(v) => second = v.to_string(),
-            None => {
+            Ok(Some(v)) => second = v.to_string(),
+            Ok(None) => {
               return Err(create_internal_error!(format!(
                 "Undefined variable '{}' in condition",
                 key
               )))
             }
+            Err(err) => return Err(create_internal_error!(err)),
           }
         } else {
           second = source[*second_start..*second_end].to_string();
@@ -523,22 +525,23 @@ pub fn resolve_unit<'a>(
 ) -> Result<(Vec<Part>, usize), InternalError> {
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
+  let mut i = 0;
   loop {
     let part = match iter_parts.next() {
       Some((position, part)) => {
         block_ending_position = position;
         part
       }
-      None => return Err(
-        create_internal_error!(
-          "Unfinished block",
-          "must be = '\x1b[3mif [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... )\x1b[0m'",
-          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
-        )
-      ),
+      None => return Err(create_internal_error!("Unfinished block 'if'")),
     };
     match part {
-      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endif" => break,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("if") => i += 1,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endif" => {
+        i -= 1;
+        if i == 0 {
+          break;
+        }
+      }
       _ => (),
     }
   }

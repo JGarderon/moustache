@@ -12,6 +12,7 @@ pub struct Configuration {
   pub display_version: bool,
   pub no_extensions: bool,
   pub error_formatting: bool,
+  pub skip_first_line: bool,
 }
 
 impl Configuration {
@@ -27,6 +28,7 @@ impl Configuration {
       display_version: false,
       no_extensions: false,
       error_formatting: false,
+      skip_first_line: false,
     }
   }
   pub fn display(&self) -> String {
@@ -42,7 +44,8 @@ is_debugging:          '{}'
 is_reentrant:          '{}'
 display_version:       '{}'
 no_extensions:         '{}'
-error_formatting:      '{}'"#,
+error_formatting:      '{}'
+skip_first_line:       '{}'"#,
       self.input,
       self.output,
       {
@@ -59,6 +62,7 @@ error_formatting:      '{}'"#,
       self.display_version,
       self.no_extensions,
       self.error_formatting,
+      self.skip_first_line,
     )
   }
   pub fn is_helping(&mut self, v: bool) {
@@ -81,5 +85,8 @@ error_formatting:      '{}'"#,
   }
   pub fn error_formatting(&mut self, v: bool) {
     self.error_formatting = v;
+  }
+  pub fn skip_first_line(&mut self, v: bool) {
+    self.skip_first_line = v;
   }
 }

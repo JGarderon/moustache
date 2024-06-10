@@ -1,13 +1,31 @@
 ---separator
-$moustache -v myvar="all fine"
+
+command = """ $moustache -v myvar="all fine" """
+returncode = 0
+
 ---separator
+
 {% set myvar = "all fine but another" %}{{ myvar }}
-{% set a = "0" ! if empty %}{{ a }}
+{% set myvar ="all fine but another" %}{{ myvar }}
+{% set myvar= "all fine but another" %}{{ myvar }}
+{% set myvar="all fine but another" %}{{ myvar }}
+{% set myvar=myvar %}{{ myvar }}
+{% set myvar= myvar %}{{ myvar }}
+{% set myvar = myvar %}{{ myvar }}
+{% set a = "0" ! if unset %}{{ a }}
 {% set a = "1" %}{{ a }}
 {% set a = "2" ! if setted %}{{ a }}
+
 ---separator
+
+all fine but another
+all fine but another
+all fine but another
+all fine but another
+all fine but another
+all fine but another
 all fine but another
 0
 1
 2
----separator
+

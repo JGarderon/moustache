@@ -5,7 +5,7 @@ returncode = 1
 
 ---separator
 
-{{ undefined_var }}
+{{ $undefined_indirection_var }}
 
 ---separator
 
@@ -16,12 +16,16 @@ returncode = 1
 
 [1] >> Error in expression
        v1.1.0/src/engine/resolver/mod.rs#33)
-       real position of expression in document = 0 -> 19
-       target expression (here with trim !) = 'undefined_var'
+       real position of expression in document = 0 -> 32
+       target expression (here with trim !) = '$undefined_indirection_var'
        must be in the following form = '{{ text or symbol (+ text or symbol (+ ...)) }}'
 
-[2] >> Undefined variable 'undefined_var' in environment (no indirection)
-       v1.1.0/src/engine/resolver/expression/mod.rs#73)
+[2] >> Error during getting variable
+       v1.1.0/src/engine/resolver/expression/mod.rs#82)
+       invalid indirection key ('$undefined_indirection_var' not found)
 
 --
+
+
+
 
