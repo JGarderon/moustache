@@ -245,6 +245,9 @@ __Exemples :__
     {% find all in "." to csv_line ! ";" %}
     ```
 
+__Limitation connue :__
+  - Le gabarit doit correspondre à une formulation "`/chemin/*.ext`" seulement (si l'étoile est positionnée ailleurs dans la partie fichier, la première partie du fichier sera considérée comme un dossier parent - aboutissant à un chemin invalide). Sera améliorée dans la prochaine version. 
+
 #### Déclaration d'inclusion de contenu (`include`)
 
 __Grammaire locale :__
@@ -271,7 +274,7 @@ __Exemples :__
 #### Déclaration d'exécution (`execute`)
 
 __Grammaire locale :__
-  `{% execute [symbole] = [symbol-1"."symbol-2]"(" [text or symbol] ([text or symbol] ...) ")" (| [symbol"."symbol]"(" [text or symbol] ([text or symbol] ...) ")")%}` - où `symbol-1` est le nom de l'extension, et `symbol-2` le nom de la fonction à appeler
+  `{% execute [symbole] = [symbol-1'.'symbol-2]"(" [text or symbol] ([text or symbol] ...) ')' (| [symbol'.'symbol] '(' [text or symbol] ([text or symbol] ...) ')')%}` - où `symbol-1` est le nom de l'extension, et `symbol-2` le nom de la fonction à appeler
 
 __Notes :__
   - Par défaut la déclaration d'exécution __n'est pas active__ avec l'installateur par défaut de Moustache (`install.sh`), pour des raisons de sécurité et de sûreté. Vous devez rajouter `--features "engine-extensions"` à la commande de compilation pour en bénéficier. 
@@ -282,13 +285,17 @@ __Notes :__
 __Documentations disponibles via le code compilé de Moustache :__
   `moustache --help-extensions`
 
-#### Déclaration de conditionalité (`if`)
+#### Déclaration bordée de conditionalité (`if`)
 
 __Grammaire locale :__
-  `{% if [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... ) %}`
+  ```
+  {% if [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... ) %}
+  ...
+  {% endif %}
+  ```
 
 __Notes :__
-  - Cette déclaration n'est pas imbriquable dans elle-même (pas de `if` directement dans un autre).
+  - Les déclarations dans la partie `if` ne sont pas analysée durant le traitement en cours (l'imbrication ne change rien à cela).
 
 __Exemples :__
   - Condition simple :
@@ -303,18 +310,51 @@ __Exemples :__
 
     {% endif %}
     ```
-  - La logique n'est pas contrôlé, ceci ne sera jamais une condition retournant 'vrai' :
+  - La logique n'est pas contrôlée, ceci ne sera jamais une condition retournant 'vrai' :
     ```
     {% if mavar == "1" && mavar == "2" %}
 
     {% endif %}
     ```
 
+#### Déclaration bordée d'un bloc de contenu (`block`)
 
+__Grammaire locale :__
+  ```
+  {% block %}
+  ...
+  {% endblock %}
+  ```
 
+__Notes :__
+  - Permet la déclaration d'un bloc avec un nom (qui peut provenir d'une variable), afin de pouvoir être appelé aussi souvent que nécessaire grâce à la déclaration `call`. 
+  - Lors d'une déclaration de bloc ou de son appel, le contenu interne n'est jamais traité dans la passe courante. 
 
+#### Déclaration bordée de boucle (`for`)
 
+__Grammaire locale :__
+  ```
+  {% for [symbol] in [symbol] (! [symbol or text]) %}
+  ...
+  {% endfor %}
+  ```
 
+__Notes :__
+  - Prend chaque partie d'un texte (qui peut être aussi la valeur d'un symbole), pour appliquer le contenu du bloc `for` dans le contenu de sortie, avec une affectation automatique. 
+  - Un symbole ou un texte peut être optionnel ajouté pour servir de gabarit de découpe ('_split pattern_'). Par défaut, le séparateur `\n` est utilisé.
+
+#### Déclaration bordée de contenu brut (`raw`)
+
+__Grammaire locale :__
+  ```
+  {% raw %}
+  ...
+  {% endraw %}
+  ```
+
+__Notes :__
+  - Le contenu sera systématiquement renvoyé en l'état, y compris dans les futures versions de Moustache.
+  - Permet de rajouter si utilisée dans une déclaration bordée parente, le traitement en t+2 (c'est-à-dire : le traitement immédiat du parent, puis en t+1 `raw` sera taité et enfin en t+2 les déclarations ou expression initialement inclu dans `raw`).
 
 
 ## L'auteur 
