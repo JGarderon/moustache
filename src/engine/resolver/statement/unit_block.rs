@@ -61,16 +61,23 @@ pub fn resolve_unit<'a>(
   }
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
+  let mut i = 0;
   loop {
     let part = match iter_parts.next() {
       Some((position, part)) => {
         block_ending_position = position;
         part
       }
-      None => return Err(create_internal_error!("Unfinished block in document")),
+      None => return Err(create_internal_error!("Unfinished 'block' in document")),
     };
     match part {
-      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endblock" => break,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("block") => i += 1,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endblock" => {
+        i -= 1;
+        if i == 0 {
+          break;
+        }
+      }
       _ => (),
     }
   }
