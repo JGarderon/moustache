@@ -22,6 +22,8 @@ Bref le préprocessing de texte de Moustache c'est de la [macro](https://fr.wiki
 
 ## Installation
 
+### Simple et rapide 
+
 Moustache est écrit en Rust et nécessite donc d'avoir [le compilateur installé](https://www.rust-lang.org/learn/get-started) sur la machine. Si vous souhaitez avoir une version très réduite de l'appliaction (moins d'une centaine de Ko), vous pouvez ajouter [l'utilitaire UPX](https://upx.github.io/) - mais ce n'est pas obligatoire.
 
 La première étape est de cloner le dépôt sur lequel se trouve le code source :
@@ -30,15 +32,13 @@ La première étape est de cloner le dépôt sur lequel se trouve le code source
 git clone https://git.nothus.fr/produits/moustache.git
 ```
 
-Exécutez ensuite dans votre terminal le fichier `install.sh` :
-
+Puis :
 ```bash
-chmod +x ./install.sh # rendre le script exécutable
-./install.sh # installation pour l'utilisateur courant
-./install.sh +sudo # installation pour tout le système (nécessite des priviléges d'administrateur)
+cargo build --release
+cp "target/release/moustache" ~/.local/bin/moustache
 ```
 
-Voilà, c'est fini. Moustache est compilé et installé. Testons que tout va bien :
+Voilà, c'est fini. Moustache est compilé et installé pour votre profil. Testons que tout va bien :
 
 ```bash
 moustache --version
@@ -54,6 +54,26 @@ v1.1.0
 __Pour obtenir de l'aide à tout moment sur votre version précise, c'est facile : `moustache --help`__ Pour ceux qui souhaitent déjà mettre le nez dans le code : `cargo doc --open --all --all-features --document-private-items`.
 
 __Pour les utilisateurs Windows__ la procédure est sensiblement la même. Tentez une compilation manuelle (`cargo build --release`) puis utilisez le résultat (fichier `target/release/moustache` depuis l'origine du dépôt).
+
+### Plus complet et efficace 
+
+Si vous souhaitez utiliser le script d'installation local, un peu de préparation s'impose, dont voici le programme pour Ubuntu 22 ici :
+
+```bash
+apt update && apt install -y curl build-essential
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+PATH="$PATH:$HOME/.cargo/bin"
+rustup toolchain install nightly
+rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+```
+
+Exécutez ensuite dans votre terminal le fichier `install.sh` :
+
+```bash
+chmod +x ./install.sh # rendre le script exécutable
+./install.sh # installation pour l'utilisateur courant
+./install.sh +sudo # installation pour tout le système (nécessite des priviléges d'administrateur)
+```
 
 ## Les 3 délimiteurs possibles
 

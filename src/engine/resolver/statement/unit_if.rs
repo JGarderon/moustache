@@ -532,11 +532,7 @@ pub fn resolve_unit<'a>(
         block_ending_position = position;
         part
       }
-      None => return Err(
-        create_internal_error!(
-          "Unfinished block 'if'"
-        )
-      ),
+      None => return Err(create_internal_error!("Unfinished block 'if'")),
     };
     match part {
       &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("if") => i += 1,

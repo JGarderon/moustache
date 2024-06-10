@@ -56,17 +56,17 @@ def process(args):
   KO = 0
   tests_paths = Path(args.tests_path).glob(args.tests_pattern) 
   for i, test_path in enumerate(tests_paths):
-    logging.debug(f'Test n°{i} - Process of "{test_path}"... ')
+    logging.debug(f'Test n°{i} ("{test_path}") - Process... ')
     parts = get_parts(test_path)
     s_conf, s_in, s_out, *s_others = parts
     if len(s_others)>0:
       raise Exception('invalid test file format (too much parts !)')
     try: 
       process_test(args.exec_path, s_conf, s_in, s_out)
-      logging.debug(f'Test n°{i} - Test passed...')
+      logging.debug(f'Test n°{i} ("{test_path}") - Test passed...')
       OK += 1
     except Exception as err: 
-      logging.error(f'Test n°{i} - Test failed: {err}') 
+      logging.error(f'Test n°{i} ("{test_path}") - Test failed: {err}') 
       KO += 1
   return KO, (OK+KO)
 

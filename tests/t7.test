@@ -22,7 +22,7 @@ returncode = 1
 
 [2] >> Error during getting variable
        v1.1.0/src/engine/resolver/expression/mod.rs#82)
-       invalid interpolation key ('$undefined_indirection_var' not found)
+       invalid indirection key ('$undefined_indirection_var' not found)
 
 --
 

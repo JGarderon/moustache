@@ -24,12 +24,7 @@ pub fn resolve_unit<'a>(
         block_ending_position = position;
         part
       }
-      None => {
-        return Err(create_internal_error!(
-          "Unfinished block",
-          "must be = '\x1b[3mfor [symbol] in [symbol or text]\x1b[0m'"
-        ))
-      }
+      None => return Err(create_internal_error!("Unfinished block 'for'")),
     };
     match part {
       &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("for") => i += 1,
