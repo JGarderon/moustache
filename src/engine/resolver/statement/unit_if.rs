@@ -525,6 +525,7 @@ pub fn resolve_unit<'a>(
 ) -> Result<(Vec<Part>, usize), InternalError> {
   let mut iter_parts = doc.stack.iter().skip(doc_position).enumerate();
   let mut block_ending_position: usize;
+  let mut i = 0;
   loop {
     let part = match iter_parts.next() {
       Some((position, part)) => {
@@ -533,14 +534,18 @@ pub fn resolve_unit<'a>(
       }
       None => return Err(
         create_internal_error!(
-          "Unfinished block",
-          "must be = '\x1b[3mif [symbol or text] [ '==' | '!=' ] [symbol or text] ( [ '&' | '|' ] ... )\x1b[0m'",
-          format!("found statement = '\x1b[3m{}\x1b[0m'", source.trim())
+          "Unfinished block 'if'"
         )
       ),
     };
     match part {
-      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endif" => break,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim().starts_with("if") => i += 1,
+      &Part::Statement(s, e) if doc.source[s + 2..e - 2].trim() == "endif" => {
+        i -= 1;
+        if i == 0 {
+          break;
+        }
+      }
       _ => (),
     }
   }
